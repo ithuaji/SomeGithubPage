@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>成为老师！</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #a0d8ef;
+			-webkit-user-select: none; /* Chrome, Safari */
+			-moz-user-select: none; /* Firefox */
+			-ms-user-select: none; /* Internet Explorer/Edge */
+			user-select: none; /* 标准写法 */
+        }
+        #info {
+            font-size: 2vh;
+            margin: 1vh;
+            color: #2c3e50;
+        }
+        canvas {
+            width: 100vmin;
+            height: 75vmin;
+            max-width: 100%;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            background: #fff;
+        }
+        #controls {
+        display: grid;
+        grid-template-areas:
+            ". up ."
+            "left . right"
+            ". down .";
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .control-button {
+        font-size: 50px;
+        padding: 10px 20px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .control-button:active {
+        background: #2980b9;
+    }
+    .control-button.up { grid-area: up; }
+    .control-button.down { grid-area: down; }
+    .control-button.left { grid-area: left; }
+    .control-button.right { grid-area: right; }
+        #timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2vh;
+            color: #2c3e50;
+        }
+        #restart {
+            position: absolute;
+            bottom: 20px;
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">已成为妈妈：<span id="count">0</span>/38</div>
+    <div id="timer">剩余时间：60秒</div>
+    <canvas id="gameCanvas"></canvas>
+    <button id="restart" onclick="location.reload()">重新开始</button>
+
+<script>
+	let lastTouchEnd = 0;
+	document.addEventListener('touchend', (event) => {
+	    const now = Date.now();
+	    if (now - lastTouchEnd <= 300) { // 300ms 内的双击
+	        event.preventDefault(); // 阻止默认缩放行为
+	    }
+	    lastTouchEnd = now;
+	}, false);
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const infoCount = document.getElementById('count');
+const timerElement = document.getElementById('timer');
+const restartButton = document.getElementById('restart');
+
+// 游戏配置
+const config = {
+    baseSize: 40,
+    playerSpeed: 5,
+    beeFollowSpeed: 0.1,
+    frogSpeed: 2,
+    frogCount: 3,
+    timeLimit: 60 // 新增时间限制
+};
+
+// 游戏对象
+const game = {
+    player: { x: 0, y: 0 },
+    bees: [],
+    frogs: [],
+    tamedCount: 0,
+    keys: {},
+    scaleFactor: 1,
+    startTime: Date.now(), // 新增开始时间
+    gameOver: false // 新增游戏状态
+};
+
+// 初始化画布
+function initCanvas() {
+    const aspectRatio = 4/3;
+    const maxWidth = Math.min(window.innerWidth, 1200);
+    const maxHeight = Math.min(window.innerHeight * 0.8, 900);
+    
+    canvas.width = Math.min(maxWidth, maxHeight * aspectRatio);
+    canvas.height = canvas.width / aspectRatio;
+    
+    game.scaleFactor = canvas.width / 800;
+    game.player.x = canvas.width / 2;
+    game.player.y = canvas.height / 2;
+}
+
+// 初始化蜜蜂（保持不变）...
+
+// 初始化蜜蜂
+function initBees() {
+    game.bees = [];
+    for (let i = 0; i < 38; i++) {
+        game.bees.push({
+            x: Math.random() * (canvas.width - 60) + 30,
+            y: Math.random() * (canvas.height - 60) + 30,
+            baseX: 0,
+            baseY: 0,
+            radius: Math.random() * 15 + 5,
+            angle: Math.random() * Math.PI * 2,
+            angularSpeed: (Math.random() * 0.08 + 0.02) * (Math.random() < 0.5 ? 1 : -1),
+            tamed: false,
+            tamedAnimation: null,
+            untamedAnimation: null
+        });
+        game.bees[i].baseX = game.bees[i].x;
+        game.bees[i].baseY = game.bees[i].y;
+    }
+}
+
+// 初始化青蛙（保持不变）...
+
+// 初始化青蛙
+function initFrogs() {
+    game.frogs = [];
+    for (let i = 0; i < config.frogCount; i++) {
+        game.frogs.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            dx: Math.random() * 2 - 1,
+            dy: Math.random() * 2 - 1
+        });
+    }
+}
+
+// 碰撞检测（保持不变）...
+
+// 碰撞检测（动态检测范围）
+function checkCollision(x1, y1, x2, y2) {
+    const detectRange = config.baseSize * game.scaleFactor;
+    return Math.hypot(x1 - x2, y1 - y2) < detectRange;
+}
+
+// 游戏循环
+function gameLoop() {
+    if (game.gameOver) return;
+
+    // 计算剩余时间
+    const elapsed = Math.floor((Date.now() - game.startTime) / 1000);
+    const remaining = config.timeLimit - elapsed;
+    timerElement.textContent = `剩余时间：${remaining}秒`;
+
+    // 超时检测
+    if (remaining <= 0) {
+        game.gameOver = true;
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = `${4 * game.scaleFactor}vh Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('你不配当健雄的老师！！！你不配当健雄的老师！！！你不配当健雄的老师！！！', canvas.width/2, canvas.height/2 - 40);
+        restartButton.style.display = 'block';
+        return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 移动玩家（保持不变）...
+
+    // 移动玩家
+    const speed = config.playerSpeed * game.scaleFactor;
+    if (game.keys.w) game.player.y -= speed;
+    if (game.keys.s) game.player.y += speed;
+    if (game.keys.a) game.player.x -= speed;
+    if (game.keys.d) game.player.x += speed;
+    
+    // 边界限制
+    game.player.x = Math.max(30, Math.min(canvas.width - 30, game.player.x));
+    game.player.y = Math.max(30, Math.min(canvas.height - 30, game.player.y));
+    
+    // 更新青蛙位置（保持不变）...
+
+    // 更新青蛙位置
+    const frogSpeed = config.frogSpeed * game.scaleFactor;
+    game.frogs.forEach(frog => {
+        frog.x += frog.dx * frogSpeed;
+        frog.y += frog.dy * frogSpeed;
+        
+        if (Math.random() < 0.02) {
+            frog.dx = Math.random() * 2 - 1;
+            frog.dy = Math.random() * 2 - 1;
+        }
+        
+        frog.x = Math.max(30, Math.min(canvas.width - 30, frog.x));
+        frog.y = Math.max(30, Math.min(canvas.height - 30, frog.y));
+    });
+    
+    // 处理蜜蜂逻辑（保持不变）...
+
+    // 处理蜜蜂逻辑
+    const followSpeed = config.beeFollowSpeed * game.scaleFactor;
+    game.bees.forEach(bee => {
+        if (!bee.tamed) {
+            bee.angle += bee.angularSpeed;
+            bee.x = bee.baseX + Math.cos(bee.angle) * bee.radius;
+            bee.y = bee.baseY + Math.sin(bee.angle) * bee.radius;
+            
+            bee.x = Math.max(30, Math.min(canvas.width - 30, bee.x));
+            bee.y = Math.max(30, Math.min(canvas.height - 30, bee.y));
+            
+            if (checkCollision(game.player.x, game.player.y, bee.x, bee.y)) {
+                bee.tamed = true;
+                bee.tamedAnimation = Date.now();
+                game.tamedCount++;
+                infoCount.textContent = game.tamedCount;
+            }
+        } else {
+            const angle = Math.atan2(bee.y - game.player.y, bee.x - game.player.x);
+            let targetX = game.player.x + Math.cos(angle) * 40 * game.scaleFactor;
+            let targetY = game.player.y + Math.sin(angle) * 40 * game.scaleFactor;
+            
+            targetX += Math.cos(bee.angle) * 10;
+            targetY += Math.sin(bee.angle) * 10;
+            
+            bee.x += (targetX - bee.x) * followSpeed;
+            bee.y += (targetY - bee.y) * followSpeed;
+            
+            bee.angle += bee.angularSpeed * 0.5;
+
+            game.frogs.forEach(frog => {
+                if (checkCollision(bee.x, bee.y, frog.x, frog.y)) {
+                    bee.tamed = false;
+                    bee.untamedAnimation = Date.now();
+                    game.tamedCount--;
+                    infoCount.textContent = game.tamedCount;
+                    bee.baseX = bee.x;
+                    bee.baseY = bee.y;
+                }
+            });
+        }
+    });
+    
+    // 绘制元素（保持不变）...
+
+    // 绘制元素
+    const elementSize = config.baseSize * game.scaleFactor;
+    ctx.font = `${elementSize}px Arial`;
+    
+    ctx.fillText('🧑‍🏫', game.player.x - elementSize/2, game.player.y + elementSize/2);
+    
+    ctx.fillStyle = '#f1c40f';
+    game.bees.forEach(bee => {
+        ctx.fillText(bee.tamed ? '👶' : '🧑‍🎓', bee.x - elementSize/2, bee.y + elementSize/2);
+        
+        if (bee.tamedAnimation) {
+            const animationTime = Date.now() - bee.tamedAnimation;
+            if (animationTime < 1000) {
+                const alpha = 1 - animationTime / 1000;
+                const offsetY = animationTime / 20;
+                
+                ctx.save();
+                ctx.fillStyle = `rgba(46, 204, 113, ${alpha})`;
+                ctx.font = `${elementSize * 0.8}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('妈妈！', bee.x, bee.y - elementSize - offsetY);
+                ctx.restore();
+            } else {
+                bee.tamedAnimation = null;
+            }
+        }
+        
+        if (bee.untamedAnimation) {
+            const animationTime = Date.now() - bee.untamedAnimation;
+            if (animationTime < 1000) {
+                const alpha = 1 - animationTime / 1000;
+                const offsetY = animationTime / 20;
+                
+                ctx.save();
+                ctx.fillStyle = `rgba(231, 76, 60, ${alpha})`;
+                ctx.font = `${elementSize * 0.8}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('非吾子也，吾不能答！', bee.x, bee.y - elementSize - offsetY);
+                ctx.restore();
+            } else {
+                bee.untamedAnimation = null;
+            }
+        }
+    });
+    
+    ctx.fillStyle = '#27ae60';
+    game.frogs.forEach(frog => {
+        ctx.fillText('📱', frog.x - elementSize/2, frog.y + elementSize/2);
+    });
+    
+    if (game.tamedCount === 38) {
+        game.gameOver = true;
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = `${4 * game.scaleFactor}vh Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('恭喜！收养了所有孩子！是最伟大的老师！', canvas.width/2, canvas.height/2);
+        restartButton.style.display = 'block';
+        return;
+    }
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// 窗口大小变化处理（保持不变）...
+
+// 窗口大小变化处理
+function handleResize() {
+    initCanvas();
+    initBees();
+    initFrogs();
+}
+
+// 事件监听（保持不变）...
+
+// 事件监听
+window.addEventListener('keydown', (e) => {
+    game.keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener('keyup', (e) => {
+    game.keys[e.key.toLowerCase()] = false;
+});
+
+window.addEventListener('resize', handleResize);
+
+// 初始化游戏（保持不变）...
+
+// 初始化游戏
+initCanvas();
+initBees();
+initFrogs();
+gameLoop();
+
+// 控制按钮脚本（保持不变）...
+</script>
+<div id="controls">
+    <button class="control-button up" onmousedown="startMove('up')" onmouseup="stopMove()" ontouchstart="startMove('up')" ontouchend="stopMove()">⬆️</button>
+    <button class="control-button down" onmousedown="startMove('down')" onmouseup="stopMove()" ontouchstart="startMove('down')" ontouchend="stopMove()">⬇️</button>
+    <button class="control-button left" onmousedown="startMove('left')" onmouseup="stopMove()" ontouchstart="startMove('left')" ontouchend="stopMove()">⬅️</button>
+    <button class="control-button right" onmousedown="startMove('right')" onmouseup="stopMove()" ontouchstart="startMove('right')" ontouchend="stopMove()">➡️</button>
+</div>
+<script>
+let moveInterval;
+function startMove(direction) {
+    moveInterval = setInterval(() => move(direction), 50);
+}
+function stopMove() {
+    clearInterval(moveInterval);
+}
+function move(direction) {
+    const speed = 5;
+    if (direction === 'up') game.player.y -= speed;
+    if (direction === 'down') game.player.y += speed;
+    if (direction === 'left') game.player.x -= speed;
+    if (direction === 'right') game.player.x += speed;
+}
+</script>
+</body>
+</html>
