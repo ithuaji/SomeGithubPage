@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>站点创建成功测试页面</title>
+  <style>
+    /* 主题样式 */
+    body.light-theme {
+      background: linear-gradient(45deg, #f3ec78, #af4261);
+      color: #000;
+      transition: background 0.5s, color 0.5s;
+    }
+    body.dark-theme {
+      background: linear-gradient(45deg, #232526, #414345);
+      color: #fff;
+      transition: background 0.5s, color 0.5s;
+    }
+    /* CSS 动画测试 */
+    #animation-box {
+      width: 100px;
+      height: 100px;
+      background-color: #4CAF50;
+      margin: 20px auto;
+      animation: rotateBox 3s infinite;
+    }
+    @keyframes rotateBox {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* 返回顶部按钮 */
+    #back-to-top {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      display: none;
+      z-index: 1000;
+    }
+    /* 鼠标跟踪效果的小红点 */
+    #mouse-dot {
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+      pointer-events: none;
+      z-index: 999;
+    }
+    /* 页面其他简单布局 */
+    #container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    section {
+      margin-bottom: 30px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <div id="container">
+    <h1>站点创建成功测试页面</h1>
+    <!-- JavaScript 测试 -->
+    <section>
+      <h2>JS 测试</h2>
+      <p id="js-test">JavaScript 正常运行！</p>
+    </section>
+
+    <!-- CSS 动画测试 -->
+    <section>
+      <h2>CSS 动画测试</h2>
+      <div id="animation-box"></div>
+    </section>
+    
+    <!-- 显示访问者 IP -->
+    <section>
+      <h2>访问者 IP</h2>
+      <p id="visitor-ip">正在获取 IP ……</p>
+    </section>
+    
+    <!-- 地理位置测试 -->
+    <section>
+      <h2>地理位置</h2>
+      <p id="geolocation">正在获取地理位置信息……</p>
+    </section>
+
+    <!-- 浏览器信息 & 屏幕分辨率 -->
+    <section>
+      <h2>浏览器及屏幕信息</h2>
+      <p id="browser-info">浏览器信息： </p>
+      <p id="screen-info">屏幕分辨率： </p>
+    </section>
+
+    <!-- 网络状态 & 页面加载时间 -->
+    <section>
+      <h2>网络状态 & 页面加载时间</h2>
+      <p id="network-status">网络状态： </p>
+      <p id="load-time">页面加载时间： </p>
+    </section>
+
+    <!-- 主题切换 & 动态背景效果 -->
+    <section>
+      <h2>主题切换</h2>
+      <button id="theme-toggle">切换主题</button>
+      <p>背景为 CSS 渐变动画效果</p>
+    </section>
+
+    <!-- 社交分享按钮 -->
+    <section>
+      <h2>社交分享</h2>
+      <button onclick="share('facebook')">分享到 Facebook</button>
+      <button onclick="share('twitter')">分享到 Twitter</button>
+    </section>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top">返回顶部</button>
+
+    <!-- 多语言支持 -->
+    <section>
+      <h2>多语言支持</h2>
+      <label for="language-select">选择语言：</label>
+      <select id="language-select">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+      </select>
+      <div id="multilang-content">
+        <p data-en="Hello, this is a test." data-zh="你好，这是一个测试。">Hello, this is a test.</p>
+      </div>
+    </section>
+
+    <!-- 表单提交测试 -->
+    <section>
+      <h2>表单提交测试</h2>
+      <form id="test-form">
+        <label for="name">姓名：</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="email">邮箱：</label>
+        <input type="email" id="email" name="email" required>
+        <br>
+        <button type="submit">提交</button>
+      </form>
+    </section>
+
+    <!-- Cookie 使用情况 -->
+    <section>
+      <h2>Cookie 测试</h2>
+      <p id="cookie-info">Cookie 信息： </p>
+    </section>
+
+    <!-- 本地存储测试 -->
+    <section>
+      <h2>本地存储测试</h2>
+      <p id="local-storage">LocalStorage 信息： </p>
+    </section>
+
+    <!-- WebSocket 测试 -->
+    <section>
+      <h2>WebSocket 测试</h2>
+      <p id="websocket-status">WebSocket 状态： </p>
+    </section>
+
+    <!-- 鼠标跟踪效果 -->
+    <section>
+      <h2>鼠标跟踪效果</h2>
+      <p id="mouse-coords">鼠标坐标： </p>
+    </section>
+
+
+  </div>
+
+  <!-- 跟踪鼠标的红点 -->
+  <div id="mouse-dot"></div>
+
+  <script>
+    // 记录页面加载时间
+    window.addEventListener('load', function() {
+      var loadTime = Date.now() - performance.timing.navigationStart;
+      document.getElementById('load-time').textContent = '页面加载时间： ' + loadTime + ' 毫秒';
+    });
+
+    // 地理位置测试
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        document.getElementById('geolocation').textContent = '地理位置： 纬度 ' +
+          position.coords.latitude.toFixed(4) + ', 经度 ' +
+          position.coords.longitude.toFixed(4);
+      }, function(error) {
+        document.getElementById('geolocation').textContent = '地理位置错误： ' + error.message;
+      });
+    } else {
+      document.getElementById('geolocation').textContent = '该浏览器不支持地理定位。';
+    }
+
+    // 浏览器信息
+    document.getElementById('browser-info').textContent = '浏览器信息： ' + navigator.userAgent;
+
+    // 屏幕分辨率
+    document.getElementById('screen-info').textContent = '屏幕分辨率： ' + screen.width + ' x ' + screen.height;
+
+    // 网络状态
+    function updateNetworkStatus() {
+      document.getElementById('network-status').textContent = '网络状态： ' + (navigator.onLine ? '在线' : '离线');
+    }
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    updateNetworkStatus();
+
+    // 主题切换功能
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+      if (document.body.classList.contains('dark-theme')) {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+        document.body.classList.add('dark-theme');
+      }
+    });
+
+    // 社交分享功能
+    function share(platform) {
+      var url = encodeURIComponent(window.location.href);
+      var text = encodeURIComponent("请看看这个测试页面！");
+      if (platform === 'facebook') {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank');
+      } else if (platform === 'twitter') {
+        window.open('https://twitter.com/intent/tweet?url=' + url + '&text=' + text, '_blank');
+      }
+    }
+
+    // 返回顶部按钮
+    var backToTopBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 300) {
+        backToTopBtn.style.display = 'block';
+      } else {
+        backToTopBtn.style.display = 'none';
+      }
+    });
+    backToTopBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 多语言支持
+    document.getElementById('language-select').addEventListener('change', function(){
+      var lang = this.value;
+      document.querySelectorAll('#multilang-content [data-en]').forEach(function(el){
+        el.textContent = el.getAttribute('data-' + lang);
+      });
+    });
+
+    // 表单提交测试
+    document.getElementById('test-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var name = document.getElementById('name').value;
+      var email = document.getElementById('email').value;
+      alert('表单提交成功！\n姓名：' + name + '\n邮箱：' + email);
+    });
+
+    // Cookie 使用情况测试
+    function setCookie(name, value, days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(';');
+      for(var i=0;i < ca.length;i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+      }
+      return null;
+    }
+    setCookie("testCookie", "CookieValue", 1);
+    document.getElementById('cookie-info').textContent = "Cookie 信息： testCookie = " + getCookie("testCookie");
+
+    // 本地存储测试
+    localStorage.setItem("testLocalStorage", "LocalStorageValue");
+    document.getElementById('local-storage').textContent = "LocalStorage 信息： testLocalStorage = " + localStorage.getItem("testLocalStorage");
+
+    // WebSocket 测试（连接公共回显服务器）
+    if ("WebSocket" in window) {
+      var ws = new WebSocket("wss://echo.websocket.events/");
+      ws.onopen = function() {
+        document.getElementById('websocket-status').textContent = "WebSocket 状态： 已连接";
+        ws.send("Hello WebSocket!");
+      };
+      ws.onmessage = function (evt) {
+        var received_msg = evt.data;
+        document.getElementById('websocket-status').textContent += " | 收到信息：" + received_msg;
+        ws.close();
+      };
+      ws.onerror = function(err) {
+        document.getElementById('websocket-status').textContent = "WebSocket 状态： 连接错误";
+      };
+    } else {
+      document.getElementById('websocket-status').textContent = "WebSocket 状态： 浏览器不支持";
+    }
+
+    // 鼠标跟踪效果
+    var mouseDot = document.getElementById('mouse-dot');
+    document.addEventListener('mousemove', function(e) {
+      mouseDot.style.left = e.pageX + 'px';
+      mouseDot.style.top = e.pageY + 'px';
+      document.getElementById('mouse-coords').textContent = "鼠标坐标： " + e.pageX + ", " + e.pageY;
+    });
+
+    // 显示访问者 IP（使用第三方 API）
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('visitor-ip').textContent = "访问者 IP： " + data.ip;
+      })
+      .catch(err => {
+        document.getElementById('visitor-ip').textContent = "访问者 IP： 获取失败";
+      });
+  </script>
+</body>
+</html>
