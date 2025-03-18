@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站点创建成功！</title>
+    <style>
+        /* CSS 测试样式 */
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f4f7;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            animation: checkmark 0.6s ease-in-out;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .test-box {
+            padding: 1rem;
+            margin: 1rem 0;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--secondary-color);
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 响应式测试 */
+        @media (max-width: 480px) {
+            .success-icon {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>站点创建成功！</h1>
+        <p>恭喜！您的网站已经成功部署并可以访问。</p>
+        
+        <div class="test-box">
+            <h3>CSS 测试区域</h3>
+            <p>这个区域用来测试样式表：</p>
+            <button class="btn" onclick="testJS()">点击测试 JavaScript</button>
+        </div>
+
+        <div class="test-box">
+            <h3>功能测试</h3>
+            <p>当前时间： <span id="timestamp"></span></p>
+        </div>
+
+        <footer style="margin-top: 2rem; color: #888;">
+            <p>© <span id="currentYear"></span> 版权所有</p>
+        </footer>
+    </div>
+
+    <script>
+        // JavaScript 测试
+        function testJS() {
+            alert("JavaScript 功能正常！");
+            document.querySelector('.btn').style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                document.querySelector('.btn').style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // 显示动态内容
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // 添加加载动画
+        window.onload = function() {
+            document.body.style.opacity = 1;
+            document.body.style.transition = 'opacity 0.5s ease';
+        };
+    </script>
+</body>
+</html>
