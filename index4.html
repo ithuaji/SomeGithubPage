@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>站点测试文件</title>
+  <!-- 引入 Bootstrap CDN 用于快速美化页面 -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* 页面整体背景动画 */
+    body {
+      transition: background 1s;
+      animation: backgroundAnimation 10s infinite alternate;
+    }
+    @keyframes backgroundAnimation {
+      from { background: #ffcccc; }
+      to { background: #ccffff; }
+    }
+    /* 返回顶部按钮样式 */
+    #backToTop {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: none;
+      z-index: 1000;
+    }
+    /* 主题样式 */
+    .dark-theme {
+      background-color: #333;
+      color: #eee;
+    }
+    .light-theme {
+      background-color: #fff;
+      color: #000;
+    }
+    /* CSS 动画测试 - 旋转方块 */
+    .animate-box {
+      width: 100px;
+      height: 100px;
+      background-color: #007bff;
+      animation: rotateBox 3s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes rotateBox {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <div class="container mt-4">
+    <h1>站点测试文件</h1>
+
+    <!-- JS 测试：点击按钮弹出 alert -->
+    <button id="jsTestBtn" class="btn btn-primary">点击测试JS Alert</button>
+
+    <!-- CSS 动画测试 -->
+    <div class="animate-box"></div>
+
+    <!-- 显示设备信息 -->
+    <div id="info" class="mt-4">
+      <h3>设备信息</h3>
+      <p id="geolocation">地理位置: 获取中...</p>
+      <p id="browserInfo">浏览器信息: </p>
+      <p id="screenRes">屏幕分辨率: </p>
+      <p id="networkStatus">网络状态: </p>
+      <p id="pageLoadTime">页面加载时间: </p>
+      <p id="visitorIP">访问者IP: 获取中...</p>
+    </div>
+
+    <!-- 动态显示当前时间 -->
+    <div id="currentTime" class="mt-4">
+      当前时间：<span id="timeDisplay"></span>
+    </div>
+
+    <!-- 主题切换 -->
+    <button id="themeSwitcher" class="btn btn-secondary mt-4">切换主题</button>
+
+    <!-- 社交分享按钮（Web Share API） -->
+    <div class="mt-4">
+      <h3>社交分享</h3>
+      <button id="shareBtn" class="btn btn-info">分享此页面</button>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button id="backToTop" class="btn btn-warning">返回顶部</button>
+
+    <!-- 多语言支持 -->
+    <div class="mt-4">
+      <h3>多语言支持</h3>
+      <select id="languageSelector" class="form-control w-25">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+      <p id="welcomeMessage" class="mt-2">欢迎访问我们的测试页面！</p>
+    </div>
+
+    <!-- 表单提交测试 -->
+    <div class="mt-4">
+      <h3>表单提交测试</h3>
+      <form id="testForm">
+        <div class="form-group">
+          <label for="inputText">输入文本:</label>
+          <input type="text" id="inputText" class="form-control" placeholder="请输入文本">
+        </div>
+        <button type="submit" class="btn btn-success">提交</button>
+      </form>
+      <div id="formResult" class="mt-2"></div>
+    </div>
+
+    <!-- Cookie 使用情况测试 -->
+    <div class="mt-4">
+      <h3>Cookie 使用情况</h3>
+      <button id="setCookieBtn" class="btn btn-dark">设置 Cookie</button>
+      <p id="cookieInfo"></p>
+    </div>
+
+    <!-- 本地存储测试 -->
+    <div class="mt-4">
+      <h3>本地存储测试</h3>
+      <button id="setLocalStorageBtn" class="btn btn-dark">设置本地存储</button>
+      <p id="localStorageInfo"></p>
+    </div>
+
+    <!-- WebSocket 测试 -->
+    <div class="mt-4">
+      <h3>WebSocket 测试</h3>
+      <button id="connectWSBtn" class="btn btn-primary">连接 WebSocket</button>
+      <input type="text" id="wsMessage" class="form-control mt-2" placeholder="发送消息">
+      <button id="sendWSBtn" class="btn btn-secondary mt-2">发送消息</button>
+      <p id="wsStatus"></p>
+      <p id="wsReceived"></p>
+    </div>
+  </div>
+
+  <script>
+    // 1. JS 测试：点击按钮弹出 alert
+    document.getElementById('jsTestBtn').addEventListener('click', function(){
+      alert('JS 测试：按钮点击成功！');
+    });
+
+    // 2. 获取地理位置
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(function(position){
+        document.getElementById('geolocation').textContent = 
+          '地理位置: 纬度 ' + position.coords.latitude + ', 经度 ' + position.coords.longitude;
+      }, function(error){
+        document.getElementById('geolocation').textContent = '地理位置获取失败: ' + error.message;
+      });
+    } else {
+      document.getElementById('geolocation').textContent = '浏览器不支持地理位置获取';
+    }
+
+    // 3. 显示浏览器信息和屏幕分辨率
+    document.getElementById('browserInfo').textContent = '浏览器信息: ' + navigator.userAgent;
+    document.getElementById('screenRes').textContent = '屏幕分辨率: ' + window.screen.width + 'x' + window.screen.height;
+
+    // 4. 网络状态监听（在线/离线）
+    function updateNetworkStatus() {
+      document.getElementById('networkStatus').textContent = '网络状态: ' + (navigator.onLine ? '在线' : '离线');
+    }
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    updateNetworkStatus();
+
+    // 5. 页面加载时间（使用 performance API）
+    window.addEventListener('load', function(){
+      let loadTime = performance.now();
+      document.getElementById('pageLoadTime').textContent = '页面加载时间: ' + loadTime.toFixed(2) + ' 毫秒';
+    });
+
+    // 6. 动态显示当前时间（每秒更新一次）
+    function updateTime(){
+      document.getElementById('timeDisplay').textContent = new Date().toLocaleTimeString();
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // 7. 主题切换（浅色/深色）
+    document.getElementById('themeSwitcher').addEventListener('click', function(){
+      document.body.classList.toggle('dark-theme');
+      document.body.classList.toggle('light-theme');
+    });
+
+    // 8. 社交分享（使用 Web Share API，如果不支持则提示）
+    document.getElementById('shareBtn').addEventListener('click', function(){
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          text: '检查这个测试页面！',
+          url: window.location.href,
+        }).then(() => {
+          console.log('成功分享');
+        }).catch((error) => {
+          console.log('分享失败', error);
+        });
+      } else {
+        alert('Web Share API 不支持此浏览器');
+      }
+    });
+
+    // 9. 返回顶部按钮（滚动一定距离后显示）
+    window.addEventListener('scroll', function(){
+      if (document.documentElement.scrollTop > 200) {
+        document.getElementById('backToTop').style.display = 'block';
+      } else {
+        document.getElementById('backToTop').style.display = 'none';
+      }
+    });
+    document.getElementById('backToTop').addEventListener('click', function(){
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+
+    // 10. 多语言支持：中英文切换
+    const translations = {
+      zh: {
+        welcome: '欢迎访问我们的测试页面！',
+        formLabel: '输入文本:',
+        formPlaceholder: '请输入文本'
+      },
+      en: {
+        welcome: 'Welcome to our test page!',
+        formLabel: 'Enter text:',
+        formPlaceholder: 'Please enter text'
+      }
+    };
+    document.getElementById('languageSelector').addEventListener('change', function(){
+      let lang = this.value;
+      document.getElementById('welcomeMessage').textContent = translations[lang].welcome;
+      document.querySelector('label[for="inputText"]').textContent = translations[lang].formLabel;
+      document.getElementById('inputText').placeholder = translations[lang].formPlaceholder;
+    });
+
+    // 11. 表单提交测试
+    document.getElementById('testForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      let text = document.getElementById('inputText').value;
+      document.getElementById('formResult').textContent = '表单提交成功，输入内容: ' + text;
+    });
+
+    // 12. Cookie 使用测试：设置一个 Cookie
+    document.getElementById('setCookieBtn').addEventListener('click', function(){
+      document.cookie = "testCookie=HelloCookie; max-age=3600; path=/";
+      document.getElementById('cookieInfo').textContent = 'Cookie 已设置: testCookie=HelloCookie';
+    });
+
+    // 13. 本地存储测试：设置本地存储
+    document.getElementById('setLocalStorageBtn').addEventListener('click', function(){
+      localStorage.setItem('testLocalStorage', 'HelloLocalStorage');
+      document.getElementById('localStorageInfo').textContent = '本地存储已设置: testLocalStorage=HelloLocalStorage';
+    });
+
+    // 14. WebSocket 测试：连接公共回显服务器
+    let ws;
+    document.getElementById('connectWSBtn').addEventListener('click', function(){
+      if(ws && ws.readyState === WebSocket.OPEN){
+        alert('WebSocket 已连接');
+        return;
+      }
+      ws = new WebSocket('wss://echo.websocket.events');
+      ws.onopen = function(){
+        document.getElementById('wsStatus').textContent = 'WebSocket 连接已打开';
+      };
+      ws.onmessage = function(event){
+        document.getElementById('wsReceived').textContent = '接收到: ' + event.data;
+      };
+      ws.onerror = function(error){
+        document.getElementById('wsStatus').textContent = 'WebSocket 错误: ' + error;
+      };
+      ws.onclose = function(){
+        document.getElementById('wsStatus').textContent = 'WebSocket 已关闭';
+      };
+    });
+    document.getElementById('sendWSBtn').addEventListener('click', function(){
+      if(ws && ws.readyState === WebSocket.OPEN){
+        let message = document.getElementById('wsMessage').value;
+        ws.send(message);
+      } else {
+        alert('WebSocket 未连接');
+      }
+    });
+
+    // 15. 鼠标跟踪效果：显示鼠标当前坐标
+    document.addEventListener('mousemove', function(e){
+      let tracker = document.getElementById('mouseTracker');
+      if(!tracker){
+        tracker = document.createElement('div');
+        tracker.id = 'mouseTracker';
+        tracker.style.position = 'fixed';
+        tracker.style.pointerEvents = 'none';
+        tracker.style.background = 'rgba(0,0,0,0.5)';
+        tracker.style.color = '#fff';
+        tracker.style.padding = '5px';
+        tracker.style.borderRadius = '3px';
+        document.body.appendChild(tracker);
+      }
+      tracker.style.left = (e.pageX + 10) + 'px';
+      tracker.style.top = (e.pageY + 10) + 'px';
+      tracker.textContent = 'X: ' + e.pageX + ' Y: ' + e.pageY;
+    });
+
+    // 16. 显示访问者IP（调用外部 API）
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('visitorIP').textContent = '访问者IP: ' + data.ip;
+      })
+      .catch(err => {
+        document.getElementById('visitorIP').textContent = '无法获取IP: ' + err;
+      });
+  </script>
+</body>
+</html>
