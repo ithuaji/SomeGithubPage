@@ -92,6 +92,32 @@
         background-color: #f8d7da;
         color: #721c24;
     }
+    /* 新增：详细统计样式 */
+    .detailed-stats-container {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+    }
+    .detailed-stats-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    .detailed-stat-item {
+        margin-bottom: 8px;
+    }
+    .detailed-stat-type {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .detailed-stat-accounts {
+        font-size: 0.9rem;
+        color: #555;
+        word-break: break-all; /* 防止长账号导致布局错乱 */
+    }
   </style>
 </head>
 <body>
@@ -112,6 +138,12 @@
         </div>
         <button id="clearAllStatusBtn" onclick="confirmClearAllStatus()">清除所有状态</button>
         <div id="clearMessage"></div>
+
+        <!-- 新增：详细统计展示区域 -->
+        <div id="detailedStatsSection" class="detailed-stats-container" style="display:none;">
+            <div class="detailed-stats-title">详细异常统计</div>
+            <div id="detailedStatsContent"></div>
+        </div>
     </div>
 
   </div>
@@ -139,6 +171,7 @@
             if (response.ok) {
                 messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
                 loadStats(); // 导入成功后刷新统计
+                loadDetailedStats(); // 同时刷新详细统计
             } else {
                 messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
             }
@@ -173,6 +206,49 @@
         }
     }
 
+    // --- 新增函数：加载详细统计 ---
+    async function loadDetailedStats() {
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/detailed_stats');
+            const data = await response.json();
+            if (response.ok) {
+                const detailedContentDiv = document.getElementById('detailedStatsContent');
+                let detailedHtml = `<div class="detailed-stat-item"><strong>总计异常: ${data.total_error_count}</strong></div>`;
+                
+                // 显示各类异常
+                for (const [status, count] of Object.entries(data.error_types)) {
+                    const accounts = data.error_details[status];
+                    detailedHtml += `
+                        <div class="detailed-stat-item">
+                            <span class="detailed-stat-type">${status} (${count}个):</span>
+                            <div class="detailed-stat-accounts">${accounts.join(', ')}</div>
+                        </div>
+                    `;
+                }
+
+                // 显示未完成
+                if (data.uncompleted_count > 0) {
+                    detailedHtml += `
+                        <div class="detailed-stat-item">
+                            <span class="detailed-stat-type">未完成 (${data.uncompleted_count}个):</span>
+                            <div class="detailed-stat-accounts">${data.uncompleted_details.join(', ')}</div>
+                        </div>
+                    `;
+                }
+
+                detailedContentDiv.innerHTML = detailedHtml;
+                document.getElementById('detailedStatsSection').style.display = 'block'; // 显示区域
+            } else {
+                document.getElementById('detailedStatsContent').innerHTML = `<div class="message error">加载详细统计失败: ${data.error}</div>`;
+                document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
+            }
+        } catch (err) {
+            console.error('Load detailed stats error:', err);
+            document.getElementById('detailedStatsContent').innerHTML = '<div class="message error">网络错误，加载详细统计失败</div>';
+            document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
+        }
+    }
+
     function confirmClearAllStatus() {
         const confirmation = prompt("⚠️ 危险操作！\n此操作将清除所有记录的状态。\n请输入 '确认清除' 以继续：");
         if (confirmation === "确认清除") {
@@ -195,6 +271,7 @@
             if (response.ok) {
                 messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
                 loadStats(); // 清除成功后刷新统计
+                loadDetailedStats(); // 同时刷新详细统计
             } else {
                 messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
             }
@@ -207,6 +284,7 @@
     // 页面加载时获取统计信息
     window.onload = () => {
         loadStats();
+        loadDetailedStats(); // 加载详细统计
     };
 
   </script>
