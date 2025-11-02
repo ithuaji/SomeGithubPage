@@ -387,11 +387,26 @@
             "密码错误", "账号不存在", "网络异常", "设备故障",
             "手机没电", "部署异常", "NPS联结异常", "账号被其他人登录", "时间不够"
         ];
-        const status = prompt(`选择异常状态:\n${statusOptions.join('\n')}`);
-        if (status && statusOptions.includes(status)) {
-            sendMarkStatusRequest(recordId, status);
-        } else if (status) {
-            alert("无效的状态选项！");
+        // 创建一个临时的div来显示选项
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = `<div class="status-options"><h3>选择异常状态:</h3><ul>${statusOptions.map((opt, idx) => `<li><button onclick="selectStatus(${recordId}, '${opt}')">${opt}</button></li>`).join('')}</ul><button onclick="closeStatusOptions()">取消</button></div>`;
+        tempDiv.id = 'status-options-overlay';
+        tempDiv.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+        `;
+        document.body.appendChild(tempDiv);
+    }
+
+    function selectStatus(recordId, status) {
+        sendMarkStatusRequest(recordId, status);
+        closeStatusOptions();
+    }
+
+    function closeStatusOptions() {
+        const overlay = document.getElementById('status-options-overlay');
+        if (overlay) {
+            overlay.remove();
         }
     }
 
