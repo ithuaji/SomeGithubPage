@@ -1,293 +1,496 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>管理端</title>
+  <title>设备信息查询</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       padding: 16px;
       margin: 0;
-      background-color: #f8f9fa;
+      background-color: #fafafa;
       color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 8px;
-      padding: 24px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-      color: #495057;
     }
     h2 {
       font-size: 1.2rem;
       margin-bottom: 12px;
-      color: #6c757d;
     }
-    input[type="file"] {
+    input {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
       box-sizing: border-box;
     }
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 10px;
       font-size: 1rem;
-      background-color: #28a745;
+      background-color: #007aff;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
     }
     button:hover {
       opacity: 0.9;
     }
-    .stats-container {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #dee2e6;
+    .result-item {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
     }
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #eee;
+    .school {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 8px;
     }
-    .stat-label {
-        font-weight: bold;
+    .account, .password {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin: 6px 0;
+      cursor: pointer;
+      user-select: none;
+      color: #007aff;
     }
-    .stat-value {
-        color: #495057;
+    .account:hover, .password:hover {
+      text-decoration: underline;
     }
-    #clearAllStatusBtn {
-        background-color: #dc3545; /* Red */
-    }
-    #clearAllStatusBtn:hover {
-        background-color: #c82333;
-    }
-    .loading {
-        color: #888;
-    }
-    .message {
-        margin-top: 10px;
-        padding: 10px;
-        border-radius: 4px;
-        text-align: center;
-    }
-    .message.success {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    .message.error {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    /* 新增：详细统计样式 */
-    .detailed-stats-container {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-radius: 6px;
-        border-left: 4px solid #007bff;
-    }
-    .detailed-stats-title {
-        font-size: 1.1rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-        color: #495057;
-    }
-    .detailed-stat-item {
-        margin-bottom: 8px;
-    }
-    .detailed-stat-type {
-        font-weight: bold;
-        color: #6c757d;
-    }
-    .detailed-stat-accounts {
-        font-size: 0.9rem;
-        color: #555;
-        word-break: break-all; /* 防止长账号导致布局错乱 */
-    }
-  </style>
-  <style>
-    /* 添加表格样式 */
-    .detailed-table {
-      width: 100%;
-      border-collapse: collapse;
+    .details {
+      font-size: 0.85rem;
+      color: #777;
       margin-top: 10px;
-      font-size: 0.9em;
+      display: none;
     }
-    .detailed-table, .detailed-table th, .detailed-table td {
-      border: 1px solid #ccc;
-    }
-    .detailed-table th, .detailed-table td {
-      padding: 4px;
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #007aff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 8px;
+      padding: 0;
       text-align: left;
     }
-    .detailed-table th {
-      background-color: #f2f2f2;
-    }
-    .detailed-stats-container {
-      margin-top: 20px;
-    }
-    .detailed-stats-title {
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .detailed-stat-item {
-      margin-bottom: 10px;
-    }
-    .message {
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 4px;
-    }
-    .message.error {
-      background-color: #ffebee;
-      color: #c62828;
-      border: 1px solid #ffcdd2;
-    }
-    .message.success {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-      border: 1px solid #c8e6c9;
-    }
     .loading {
-      color: #666;
-      font-style: italic;
+      color: #888;
     }
-    .stat-item {
-      display: inline-block;
-      margin-right: 20px;
-      margin-bottom: 10px;
+    #result {
+      margin-top: 16px;
     }
-    .stat-label {
-      font-weight: bold;
+    .device-info {
+      font-size: 1rem;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .stat-value {
-      font-size: 1.2em;
-      color: #1976d2;
-    }
-    .container {
-      max-width: 1200px; /* 或根据需要调整 */
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1, h2, h3 {
-      color: #333;
-    }
-    button {
-      padding: 8px 16px;
-      background-color: #1976d2;
-      color: white;
-      border: none;
+    .edit-btn {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      background: #eee;
+      color: #555;
+      border: 1px solid #ccc;
       border-radius: 4px;
       cursor: pointer;
+      height: auto;
+      width: auto;
     }
-    button:hover {
-      background-color: #1565c0;
+    .edit-btn:hover {
+      background: #ddd;
     }
-    #clearAllStatusBtn {
-      background-color: #d32f2f;
-      margin-top: 10px;
+    .hidden {
+      display: none !important;
     }
-    #clearAllStatusBtn:hover {
-      background-color: #b71c1c;
+    /* 新增：上次复制标签 */
+    .copied-tag {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: bold;
     }
-    input[type="file"] {
-      margin-right: 10px;
+    /* 新增：复制成功提示横幅 */
+    #copy-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+    #copy-toast.show {
+      opacity: 1;
+    }
+    /* 新增：状态按钮样式 */
+    .status-btn {
+        margin-top: 8px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        color: #333;
+    }
+    .status-btn:hover {
+        background-color: #e0e0e0;
+    }
+    /* 新增：状态显示 */
+    .status-display {
+        margin-top: 8px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .status-completed { background-color: #d4edda; color: #155724; }
+    .status-error { background-color: #f8d7da; color: #721c24; }
+    .status-warning { background-color: #fff3cd; color: #856404; }
+    .status-uncompleted { background-color: #d1ecf1; color: #0c5460; }
+    .status-other { background-color: #e2e3e5; color: #383d41; }
+
+    /* 新增：清除状态按钮 */
+    #clearStatusBtn {
+        background-color: #dc3545; /* Bootstrap danger color */
+    }
+    #clearStatusBtn:hover {
+        background-color: #c82333;
     }
   </style>
-
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>设备信息管理系统 - 管理端</title>
-    <style>
-        /* ... (您原有的样式) ... */
-        .message { /* 提示信息样式 */
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .dangerous-button { /* 新增：危险操作按钮样式 */
-            background-color: #dc3545; /* 红色 */
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .dangerous-button:hover {
-            background-color: #c82333; /* 深红色 */
-        }
-        .stats-container {
-            margin-bottom: 20px;
-        }
-        .detailed-stats-container {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>设备信息管理系统 - 管理端</h1>
-
-    <div>
-      <h2>导入CSV数据</h2>
-      <input type="file" id="csvFile" accept=".csv" />
-      <button onclick="importCSV()">上传CSV</button>
-      <div id="importMessage"></div>
+  <div id="inputSection">
+    <h2>请输入“设备编号”（如：2）</h2>
+    <input type="text" id="modelInput" placeholder="例如：2" />
+    <button onclick="fetchDeviceInfo()">查询</button>
+  </div>
+  <div id="deviceInfoSection" class="hidden">
+    <div class="device-info">
+      <span>本机编号为 <strong id="displayedModelId"></strong></span>
+      <button class="edit-btn" onclick="toggleEditMode()">修改</button>
     </div>
+    <!-- 新增：清除状态按钮 -->
+    <button id="clearStatusBtn" onclick="confirmClearStatus()">清除所有状态</button>
+  </div>
+  <div id="result"></div>
+  <div id="copy-toast">复制成功</div>
 
-    <div class="stats-container">
-        <h2>今日统计</h2>
-        <div id="stats">
-            <div class="loading">加载统计信息...</div>
-        </div>
-        <button id="clearAllStatusBtn" onclick="confirmClearAllStatus()">清除所有状态</button>
-        <div id="clearMessage"></div>
+  <script>
+    let copiedFlags = {}; // 用于跟踪每个记录的账号和密码是否都已被复制
+    let currentData = []; // 用于缓存当前显示的数据
 
-    <div class="proxy-section" style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa;">
-        <h2>代客操作区</h2>
-        <p style="color: #666; font-size: 0.9em;">为无法操作的设备代为标记状态</p>
+    function showCopyToast() {
+      const toast = document.getElementById('copy-toast');
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 1500);
+    }
 
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <input type="text" id="proxyModelInput" placeholder="请输入设备编号" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
-            <button onclick="proxyFetchDeviceInfo()" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">查询设备</button>
-        </div>
-        <div id="proxyResult"></div>
-    </div>
+    function copyToClipboard(text, recordId, type) { // 增加recordId和type参数
+      // 保存到 localStorage
+      if (type === 'account') {
+        localStorage.setItem('lastCopied', JSON.stringify({ type: 'account', value: text, recordId: recordId }));
+      } else if (type === 'password') {
+        localStorage.setItem('lastCopied', JSON.stringify({ type: 'password', value: text, recordId: recordId }));
+      }
 
-    <script>
-    // ... (其他现有函数) ...
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          showCopyToast();
+          markCopied(recordId, type); // 标记复制状态
+        }).catch(() => {
+          fallbackCopy(text, recordId, type);
+        });
+      } else {
+        fallbackCopy(text, recordId, type);
+      }
+    }
 
-    async function proxyFetchDeviceInfo() {
-      const input = document.getElementById('proxyModelInput');
+    function fallbackCopy(text, recordId, type) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showCopyToast();
+        markCopied(recordId, type); // 标记复制状态
+      } catch (err) {
+        console.error("Fallback copy failed", err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function markCopied(recordId, type) {
+        if (!copiedFlags[recordId]) {
+            copiedFlags[recordId] = { account: false, password: false };
+        }
+        copiedFlags[recordId][type] = true;
+
+        // 检查是否账号和密码都已复制
+        if (copiedFlags[recordId].account && copiedFlags[recordId].password) {
+            // 发送请求标记为完成
+            markRecordCompleted(recordId);
+        }
+
+        // 立即更新UI，显示“上次复制”标签
+        updateLastCopiedTag(recordId);
+    }
+
+    async function markRecordCompleted(recordId) {
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/mark_completed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ record_id: recordId })
+            });
+            if (response.ok) {
+                // 更新本地显示状态 (可选，也可以重新查询)
+                const statusDiv = document.querySelector(`#status-${recordId}`);
+                if (statusDiv) {
+                     statusDiv.textContent = '今日已经完成';
+                     statusDiv.className = 'status-display status-completed';
+                }
+                console.log(`Record ${recordId} marked as completed.`);
+            } else {
+                console.error('Failed to mark record as completed:', await response.text());
+            }
+        } catch (err) {
+            console.error('Network error marking record as completed:', err);
+        }
+    }
+
+    function updateLastCopiedTag(recordId) {
+        // 移除所有现有的“上次复制”标签
+        const existingTags = document.querySelectorAll('.copied-tag');
+        existingTags.forEach(tag => tag.remove());
+
+        // 为指定记录添加“上次复制”标签
+        const recordDiv = document.querySelector(`#record-${recordId}`);
+        if (recordDiv) {
+            const tag = document.createElement('div');
+            tag.className = 'copied-tag';
+            tag.textContent = '上次复制';
+            recordDiv.appendChild(tag);
+        }
+    }
+
+    function renderResults(data) {
+      currentData = data; // 缓存数据
+      const resultEl = document.getElementById('result');
+      if (!Array.isArray(data) || data.length === 0) {
+        resultEl.innerHTML = '<p>未找到相关设备信息。</p>';
+        return;
+      }
+
+      let lastCopied = null;
+      try {
+        const stored = localStorage.getItem('lastCopied');
+        if (stored) lastCopied = JSON.parse(stored);
+      } catch (e) {
+        lastCopied = null;
+      }
+
+      resultEl.innerHTML = '';
+      data.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.id = `record-${item.id}`; // 为每个记录项添加ID
+
+        const school = document.createElement('div');
+        school.className = 'school';
+        const luRuBianHao = item.录入编号 || '';
+        const xueXiao = item.学校 || '未知学校';
+        if (luRuBianHao) {
+          school.textContent = `${luRuBianHao}、${xueXiao}`;
+        } else {
+          school.textContent = xueXiao;
+        }
+
+        // 检查学校名称是否为 "-did"，如果是则自动标记为完成
+        if (xueXiao === "-did") {
+          markRecordCompleted(item.id);
+          // 可以选择性地隐藏该条目或继续显示，这里我们继续显示但标记为完成
+          // 如果需要隐藏，可以使用 `return;` 或跳过后续添加元素的步骤
+        }
+
+        const account = document.createElement('div');
+        account.className = 'account';
+        account.textContent = '账号：' + (item.账号 || '');
+        account.onclick = () => copyToClipboard(item.账号 || '', item.id, 'account');
+
+        const password = document.createElement('div');
+        password.className = 'password';
+        password.textContent = '密码：' + (item.密码 || '');
+        password.onclick = () => copyToClipboard(item.密码 || '', item.id, 'password');
+
+        const details = document.createElement('div');
+        details.className = 'details';
+        const otherFields = { ...item };
+        delete otherFields.学校;
+        delete otherFields.账号;
+        delete otherFields.密码;
+        delete otherFields.id; // 不显示内部ID
+        delete otherFields.status; // 状态单独显示
+        delete otherFields.status_color; // 颜色类单独处理
+        let detailText = '';
+        for (const [key, value] of Object.entries(otherFields)) {
+          if (value !== '' && value !== null && value !== undefined) {
+            detailText += `${key}：${value}\n`;
+          }
+        }
+        details.textContent = detailText.trim();
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'toggle-btn';
+        toggleBtn.textContent = '展开详细 ▼';
+        toggleBtn.onclick = () => {
+          const isVisible = details.style.display === 'block';
+          details.style.display = isVisible ? 'none' : 'block';
+          toggleBtn.textContent = isVisible ? '展开详细 ▼' : '收起详细 ▲';
+        };
+
+        // 显示状态
+        const statusDiv = document.createElement('div');
+        statusDiv.id = `status-${item.id}`; // 为状态div添加ID
+        statusDiv.className = `status-display ${item.status_color || 'status-uncompleted'}`;
+        statusDiv.textContent = item.status || '未完成';
+
+        // 状态标记按钮 (仅当状态不是'今日已经完成'时显示)
+        const statusBtnContainer = document.createElement('div');
+        if (item.status !== '今日已经完成') {
+            const statusBtn = document.createElement('button');
+            statusBtn.className = 'status-btn';
+            statusBtn.textContent = '标记异常';
+            statusBtn.onclick = () => promptAndMarkStatus(item.id);
+            statusBtnContainer.appendChild(statusBtn);
+        }
+
+        // 检查当前项是否是上次复制的
+        if (lastCopied && lastCopied.recordId === item.id) {
+            const tag = document.createElement('div');
+            tag.className = 'copied-tag';
+            tag.textContent = '上次复制';
+            div.appendChild(tag);
+        }
+
+        div.appendChild(school);
+        div.appendChild(account);
+        div.appendChild(password);
+        div.appendChild(statusDiv);
+        div.appendChild(statusBtnContainer); // 添加按钮容器
+        div.appendChild(toggleBtn);
+        div.appendChild(details);
+        resultEl.appendChild(div);
+      });
+    }
+
+    function promptAndMarkStatus(recordId) {
+        const statusOptions = [
+            "密码错误", "账号不存在", "网络异常", "设备故障",
+            "手机没电", "部署异常", "NPS联结异常", "账号被其他人登录", "时间不够"
+        ];
+        // 创建一个临时的div来显示选项
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = `<div class="status-options"><h3>选择异常状态:</h3><ul>${statusOptions.map((opt, idx) => `<li><button onclick="selectStatus(${recordId}, '${opt}')">${opt}</button></li>`).join('')}</ul><button onclick="closeStatusOptions()">取消</button></div>`;
+        tempDiv.id = 'status-options-overlay';
+        tempDiv.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+        `;
+        document.body.appendChild(tempDiv);
+    }
+
+    function selectStatus(recordId, status) {
+        sendMarkStatusRequest(recordId, status);
+        closeStatusOptions();
+    }
+
+    function closeStatusOptions() {
+        const overlay = document.getElementById('status-options-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    async function sendMarkStatusRequest(recordId, status) {
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/mark_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ record_id: recordId, status: status })
+            });
+            if (response.ok) {
+                // 更新本地显示状态 (可选，也可以重新查询)
+                const statusDiv = document.querySelector(`#status-${recordId}`);
+                if (statusDiv) {
+                     statusDiv.textContent = status;
+                     // 重新获取颜色类 (从服务器响应或本地计算)
+                     // 这里简化处理，直接根据status设置
+                     statusDiv.className = `status-display ${getStatusColorClass(status)}`;
+                }
+                console.log(`Record ${recordId} marked with status: ${status}`);
+            } else {
+                console.error('Failed to mark status:', await response.text());
+                alert("标记失败，请重试。");
+            }
+        } catch (err) {
+            console.error('Network error marking status:', err);
+            alert("网络错误，标记失败。");
+        }
+    }
+
+    function getStatusColorClass(status) {
+        // 与后端逻辑保持一致
+        const colorMap = {
+            "今日已经完成": "status-completed",
+            "密码错误": "status-error",
+            "账号不存在": "status-error",
+            "网络异常": "status-error",
+            "设备故障": "status-error",
+            "手机没电": "status-warning",
+            "部署异常": "status-warning",
+            "NPS联结异常": "status-warning",
+            "账号被其他人登录": "status-warning",
+            "时间不够": "status-warning",
+            "": "status-uncompleted",
+            null: "status-uncompleted"
+        };
+        return colorMap[status] || "status-other";
+    }
+
+
+    async function fetchDeviceInfo() {
+      const input = document.getElementById('modelInput');
       const modelId = input.value.trim();
       if (!modelId) {
         alert('请输入设备编号');
         return;
       }
-      const resultEl = document.getElementById('proxyResult');
+      localStorage.setItem('lastModelId', modelId);
+      const resultEl = document.getElementById('result');
       resultEl.innerHTML = '<p class="loading">正在查询...</p>';
       try {
         const response = await fetch('http://47.122.79.126:5233/api/device', {
@@ -297,308 +500,70 @@
         });
         const data = await response.json();
         if (response.ok) {
-          renderProxyResults(data, modelId);
+          document.getElementById('inputSection').classList.add('hidden');
+          document.getElementById('deviceInfoSection').classList.remove('hidden');
+          document.getElementById('displayedModelId').textContent = modelId;
+          copiedFlags = {}; // 重置复制标记
+          renderResults(data);
         } else {
           resultEl.innerHTML = `<p style="color:red;">❌ 错误: ${data.error || '未知错误'}</p>`;
         }
       } catch (err) {
-        resultEl.innerHTML = `<p style="color:red;">🌐 网络错误: ${err.message}</p>`;
+        resultEl.innerHTML = `<p style="color:red;">🌐 网络错误: ${err.message}</p><p>💡 请确认 Flask 服务器已启动！</p>`;
       }
     }
 
-    function renderProxyResults(data, modelId) {
-      const resultEl = document.getElementById('proxyResult');
-      if (!Array.isArray(data) || data.length === 0) {
-        resultEl.innerHTML = '<p>该设备编号下未找到相关账号信息。</p>';
-        return;
+    function toggleEditMode() {
+      document.getElementById('inputSection').classList.remove('hidden');
+      document.getElementById('deviceInfoSection').classList.add('hidden');
+      document.getElementById('result').innerHTML = '';
+      const last = localStorage.getItem('lastModelId');
+      if (last) {
+        document.getElementById('modelInput').value = last;
       }
-
-      let html = `<h3>设备编号 <strong>${modelId}</strong> 的账号列表</h3>`;
-      data.forEach((item) => {
-        const recordId = item.id;
-        const school = (item.录入编号 ? `${item.录入编号}、` : '') + (item.学校 || '未知学校');
-        const account = item.账号 || '';
-        const status = item.status || '未完成';
-        const statusColorClass = item.status_color || 'status-uncompleted';
-
-        html += `
-        <div class="proxy-result-item" style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px;">
-          <div><strong>${school}</strong></div>
-          <div>账号: ${account}</div>
-          <div class="status-display ${statusColorClass}" style="display:inline-block; padding: 2px 6px; margin: 5px 0; border-radius: 3px; font-size: 0.9em;">状态: ${status}</div>
-
-          <div style="margin-top: 8px;">
-            <label for="statusSelect_${recordId}">标记为: </label>
-            <select id="statusSelect_${recordId}" style="padding: 4px; margin-right: 10px;">
-              <option value="今日已经完成">今日已经完成</option>
-              <option value="密码错误">密码错误</option>
-              <option value="账号不存在">账号不存在</option>
-              <option value="网络异常">网络异常</option>
-              <option value="设备故障">设备故障</option>
-              <option value="手机没电">手机没电</option>
-              <option value="部署异常">部署异常</option>
-              <option value="NPS联结异常">NPS联结异常</option>
-              <option value="账号被其他人登录">账号被其他人登录</option>
-              <option value="时间不够">时间不够</option>
-            </select>
-            <button onclick="proxyMarkStatus(${recordId})" style="padding: 4px 8px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">标记</button>
-          </div>
-        </div>`;
-      });
-      resultEl.innerHTML = html;
     }
 
-    async function proxyMarkStatus(recordId) {
-        const selectElement = document.getElementById(`statusSelect_${recordId}`);
-        if (!selectElement) {
-            console.error(`Status select element for record ${recordId} not found.`);
-            return;
-        }
-        const newStatus = selectElement.value;
-
-        try {
-            const response = await fetch('http://47.122.79.126:5233/api/mark_status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ record_id: recordId, status: newStatus })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                alert(`账号 ${recordId} 状态已更新为: ${newStatus}`);
-                // 重新查询当前设备以刷新显示
-                const modelId = document.getElementById('proxyModelInput').value.trim();
-                if (modelId) {
-                    proxyFetchDeviceInfo();
-                }
-            } else {
-                alert(`标记失败: ${data.error}`);
-            }
-        } catch (err) {
-            console.error('Network error marking status via proxy:', err);
-            alert("网络错误，标记失败。");
-        }
-    }
-
-    // ... (其余现有代码) ...
-    </script>
-
-    <style>
-    /* ... (您现有的CSS) ... */
-    .proxy-result-item {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .status-display {
-      display: inline-block;
-      padding: 2px 6px;
-      margin: 5px 0;
-      border-radius: 3px;
-      font-size: 0.9em;
-    }
-    .status-display.status-completed { background-color: #d4edda; color: #155724; }
-    .status-display.status-error { background-color: #f8d7da; color: #721c24; }
-    .status-display.status-warning { background-color: #fff3cd; color: #856404; }
-    .status-display.status-uncompleted { background-color: #d1ecf1; color: #0c5460; }
-    </style>
-
-        <!-- 修改：详细统计展示区域 -->
-        <div id="detailedStatsSection" class="detailed-stats-container" style="display:none;">
-            <div class="detailed-stats-title">详细异常统计</div>
-            <div id="detailedStatsContent"></div>
-        </div>
-
-        <!-- 新增：删除所有记录按钮区域 -->
-        <div class="dangerous-operation-section" style="margin-top: 20px; padding: 15px; border: 1px solid #ffc6cb; border-radius: 4px; background-color: #fff5f7;">
-            <h3 style="color: #721c24;">危险操作区域</h3>
-            <button id="deleteAllRecordsBtn" class="dangerous-button" onclick="confirmDeleteAllRecords()">删除所有记录</button>
-            <div id="deleteMessage"></div>
-        </div>
-
-    </div>
-
-  </div>
-
-  <script>
-    async function importCSV() {
-        const fileInput = document.getElementById('csvFile');
-        const messageDiv = document.getElementById('importMessage');
-
-        if (!fileInput.files.length) {
-            messageDiv.innerHTML = '<div class="message error">请选择一个CSV文件</div>';
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        try {
-            const response = await fetch('http://47.122.79.126:5233/api/import_csv', {
-                method: 'POST',
-                body: formData, // 注意：使用FormData时，不要设置Content-Type，浏览器会自动设置
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
-                loadStats(); // 导入成功后刷新统计
-                loadDetailedStats(); // 同时刷新详细统计
-            } else {
-                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
-            }
-        } catch (err) {
-            console.error('Import error:', err);
-            messageDiv.innerHTML = '<div class="message error">网络错误，导入失败</div>';
-        }
-    }
-
-    async function loadStats() {
-        try {
-            const response = await fetch('http://47.122.79.126:5233/api/stats');
-            const data = await response.json();
-            if (response.ok) {
-                const statsHtml = `
-                    <div class="stat-item">
-                        <span class="stat-label">今日异常:</span>
-                        <span class="stat-value">${data.today_error_count}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">今日未完成:</span>
-                        <span class="stat-value">${data.today_uncompleted_count}</span>
-                    </div>
-                `;
-                document.getElementById('stats').innerHTML = statsHtml;
-            } else {
-                document.getElementById('stats').innerHTML = `<div class="message error">加载统计失败: ${data.error}</div>`;
-            }
-        } catch (err) {
-            console.error('Load stats error:', err);
-            document.getElementById('stats').innerHTML = '<div class="message error">网络错误，加载统计失败</div>';
-        }
-    }
-
-    // --- 修改函数：加载详细统计 ---
-    async function loadDetailedStats() {
-        try {
-            const response = await fetch('http://47.122.79.126:5233/api/detailed_stats');
-            const data = await response.json();
-            if (response.ok) {
-                const detailedContentDiv = document.getElementById('detailedStatsContent');
-                let detailedHtml = `<div class="detailed-stat-item"><strong>总计异常: ${data.total_error_count}</strong></div>`;
-
-                // --- 修改：生成异常数据表格 ---
-                if (data.error_records && data.error_records.length > 0) {
-                    detailedHtml += '<h3>异常详情</h3><table class="detailed-table"><thead><tr><th>录入编号</th><th>设备编号</th><th>账号</th><th>密码</th><th>学校</th><th>异常类型</th></tr></thead><tbody>';
-                    data.error_records.forEach(record => {
-                        detailedHtml += `<tr><td>${record.录入编号 || ''}</td><td>${record.设备编号 || ''}</td><td>${record.账号 || ''}</td><td>${record.密码 || ''}</td><td>${record.学校 || ''}</td><td>${record.status || ''}</td></tr>`;
-                    });
-                    detailedHtml += '</tbody></table>';
-                } else {
-                    detailedHtml += '<p>无异常数据</p>';
-                }
-
-                // --- 修改：生成未完成数据表格 ---
-                if (data.uncompleted_records && data.uncompleted_records.length > 0) {
-                    detailedHtml += '<h3>未完成详情</h3><table class="detailed-table"><thead><tr><th>录入编号</th><th>设备编号</th><th>账号</th><th>密码</th><th>学校</th></tr></thead><tbody>';
-                    data.uncompleted_records.forEach(record => {
-                        detailedHtml += `<tr><td>${record.录入编号 || ''}</td><td>${record.设备编号 || ''}</td><td>${record.账号 || ''}</td><td>${record.密码 || ''}</td><td>${record.学校 || ''}</td></tr>`;
-                    });
-                    detailedHtml += '</tbody></table>';
-                } else {
-                    detailedHtml += '<p>无未完成数据</p>';
-                }
-
-                detailedContentDiv.innerHTML = detailedHtml;
-                document.getElementById('detailedStatsSection').style.display = 'block'; // 显示区域
-            } else {
-                document.getElementById('detailedStatsContent').innerHTML = `<div class="message error">加载详细统计失败: ${data.error}</div>`;
-                document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
-            }
-        } catch (err) {
-            console.error('Load detailed stats error:', err);
-            document.getElementById('detailedStatsContent').innerHTML = '<div class="message error">网络错误，加载详细统计失败</div>';
-            document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
-        }
-    }
-
-
-    function confirmClearAllStatus() {
+    function confirmClearStatus() {
         const confirmation = prompt("⚠️ 危险操作！\n此操作将清除所有记录的状态。\n请输入 '确认清除' 以继续：");
         if (confirmation === "确认清除") {
-            sendClearAllStatusRequest();
+            sendClearStatusRequest();
         } else {
-            document.getElementById('clearMessage').innerHTML = '<div class="message error">操作已取消</div>';
+            alert("操作已取消。");
         }
     }
 
-    async function sendClearAllStatusRequest() {
-        const messageDiv = document.getElementById('clearMessage');
+    async function sendClearStatusRequest() {
         try {
             const response = await fetch('http://47.122.79.126:5233/api/clear_status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ confirmation: "确认清除" })
             });
-
             const data = await response.json();
             if (response.ok) {
-                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
-                loadStats(); // 清除成功后刷新统计
-                loadDetailedStats(); // 同时刷新详细统计
+                alert(data.message);
+                // 清除后，可以重新查询当前设备编号以刷新显示
+                const currentModelId = document.getElementById('displayedModelId').textContent;
+                if (currentModelId) {
+                    document.getElementById('modelInput').value = currentModelId;
+                    await fetchDeviceInfo(); // 重新加载数据
+                }
             } else {
-                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+                alert(`清除失败: ${data.error}`);
             }
         } catch (err) {
-            console.error('Clear status error:', err);
-            messageDiv.innerHTML = '<div class="message error">网络错误，清除失败</div>';
+            console.error('Network error clearing status:', err);
+            alert("网络错误，清除失败。");
         }
     }
 
-    // --- 新增函数：确认删除所有记录 ---
-    function confirmDeleteAllRecords() {
-        const confirmation = prompt("⚠️ 超级危险操作！\n此操作将永久删除数据库中的所有记录，无法恢复！\n请输入 '我知道我在干什么我正在删除全部数据' 以继续：");
-        if (confirmation === "我知道我在干什么我正在删除全部数据") {
-            sendDeleteAllRecordsRequest();
-        } else {
-            document.getElementById('deleteMessage').innerHTML = '<div class="message error">操作已取消或输入错误</div>';
-        }
-    }
-
-    // --- 新增函数：发送删除所有记录请求 ---
-    async function sendDeleteAllRecordsRequest() {
-        const messageDiv = document.getElementById('deleteMessage');
-        try {
-            const response = await fetch('http://47.122.79.126:5233/api/delete_all_records', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ confirmation: "我知道我在干什么我正在删除全部数据" }) // 确保发送正确的确认字符串
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
-                // 删除后，刷新统计信息，它们应该都变为0
-                loadStats();
-                loadDetailedStats();
-            } else {
-                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
-            }
-        } catch (err) {
-            console.error('Delete all records error:', err);
-            messageDiv.innerHTML = '<div class="message error">网络错误，删除失败</div>';
-        }
-    }
-
-
-    // 页面加载时获取统计信息
     window.onload = () => {
-        loadStats();
-        loadDetailedStats(); // 加载详细统计
+      const last = localStorage.getItem('lastModelId');
+      if (last) {
+        document.getElementById('modelInput').value = last;
+        setTimeout(fetchDeviceInfo, 300);
+      }
     };
-
   </script>
-
-  
 </body>
 </html>
