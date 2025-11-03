@@ -1,340 +1,604 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>站点浏览器测试页面</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理端</title>
   <style>
-    /* 主题样式 */
-    body.light-theme {
-      background: linear-gradient(45deg, #f3ec78, #af4261);
-      color: #000;
-      transition: background 0.5s, color 0.5s;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background-color: #f8f9fa;
+      color: #333;
     }
-    body.dark-theme {
-      background: linear-gradient(45deg, #232526, #414345);
-      color: #fff;
-      transition: background 0.5s, color 0.5s;
-    }
-    /* CSS 动画测试 */
-    #animation-box {
-      width: 100px;
-      height: 100px;
-      background-color: #4CAF50;
-      margin: 20px auto;
-      animation: rotateBox 3s infinite;
-    }
-    @keyframes rotateBox {
-      0% { transform: rotate(0deg); }
-      50% { transform: rotate(180deg); }
-      100% { transform: rotate(360deg); }
-    }
-    /* 返回顶部按钮 */
-    #back-to-top {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 10px 15px;
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      display: none;
-      z-index: 1000;
-    }
-    /* 鼠标跟踪效果的小红点 */
-    #mouse-dot {
-      width: 10px;
-      height: 10px;
-      background: red;
-      border-radius: 50%;
-      position: absolute;
-      pointer-events: none;
-      z-index: 999;
-    }
-    /* 页面其他简单布局 */
-    #container {
+    .container {
       max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #495057;
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      color: #6c757d;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .stats-container {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .stat-label {
+        font-weight: bold;
+    }
+    .stat-value {
+        color: #495057;
+    }
+    #clearAllStatusBtn {
+        background-color: #dc3545; /* Red */
+    }
+    #clearAllStatusBtn:hover {
+        background-color: #c82333;
+    }
+    .loading {
+        color: #888;
+    }
+    .message {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+    }
+    .message.success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    /* 新增：详细统计样式 */
+    .detailed-stats-container {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+    }
+    .detailed-stats-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    .detailed-stat-item {
+        margin-bottom: 8px;
+    }
+    .detailed-stat-type {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .detailed-stat-accounts {
+        font-size: 0.9rem;
+        color: #555;
+        word-break: break-all; /* 防止长账号导致布局错乱 */
+    }
+  </style>
+  <style>
+    /* 添加表格样式 */
+    .detailed-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .detailed-table, .detailed-table th, .detailed-table td {
+      border: 1px solid #ccc;
+    }
+    .detailed-table th, .detailed-table td {
+      padding: 4px;
+      text-align: left;
+    }
+    .detailed-table th {
+      background-color: #f2f2f2;
+    }
+    .detailed-stats-container {
+      margin-top: 20px;
+    }
+    .detailed-stats-title {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .detailed-stat-item {
+      margin-bottom: 10px;
+    }
+    .message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .message.error {
+      background-color: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    .message.success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+    .stat-item {
+      display: inline-block;
+      margin-right: 20px;
+      margin-bottom: 10px;
+    }
+    .stat-label {
+      font-weight: bold;
+    }
+    .stat-value {
+      font-size: 1.2em;
+      color: #1976d2;
+    }
+    .container {
+      max-width: 1200px; /* 或根据需要调整 */
       margin: 0 auto;
       padding: 20px;
     }
-    section {
-      margin-bottom: 30px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    h2 {
-      margin-top: 0;
+    h1, h2, h3 {
+      color: #333;
     }
     button {
-      margin: 5px;
+      padding: 8px 16px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    #clearAllStatusBtn {
+      background-color: #d32f2f;
+      margin-top: 10px;
+    }
+    #clearAllStatusBtn:hover {
+      background-color: #b71c1c;
+    }
+    input[type="file"] {
+      margin-right: 10px;
     }
   </style>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备信息管理系统 - 管理端</title>
+    <style>
+        /* ... (您原有的样式) ... */
+        .message { /* 提示信息样式 */
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .dangerous-button { /* 新增：危险操作按钮样式 */
+            background-color: #dc3545; /* 红色 */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .dangerous-button:hover {
+            background-color: #c82333; /* 深红色 */
+        }
+        .stats-container {
+            margin-bottom: 20px;
+        }
+        .detailed-stats-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
 </head>
-<body class="light-theme">
-  <div id="container">
-    <h1>站点创建成功测试页面</h1>
-    <!-- JavaScript 测试 -->
-    <section>
-      <h2>JS 测试</h2>
-      <p id="js-test">JavaScript 正常运行！</p>
-    </section>
+<body>
+  <div class="container">
+    <h1>设备信息管理系统 - 管理端</h1>
 
-    <!-- CSS 动画测试 -->
-    <section>
-      <h2>CSS 动画测试</h2>
-      <div id="animation-box"></div>
-    </section>
-    
-    <!-- 显示访问者 IP -->
-    <section>
-      <h2>访问者 IP</h2>
-      <p id="visitor-ip">正在获取 IP ……</p>
-    </section>
-    
-    <!-- 地理位置测试 -->
-    <section>
-      <h2>地理位置</h2>
-      <p id="geolocation">正在获取地理位置信息……</p>
-    </section>
+    <div>
+      <h2>导入CSV数据</h2>
+      <input type="file" id="csvFile" accept=".csv" />
+      <button onclick="importCSV()">上传CSV</button>
+      <div id="importMessage"></div>
+    </div>
 
-    <!-- 浏览器信息 & 屏幕分辨率 -->
-    <section>
-      <h2>浏览器及屏幕信息</h2>
-      <p id="browser-info">浏览器信息： </p>
-      <p id="screen-info">屏幕分辨率： </p>
-    </section>
+    <div class="stats-container">
+        <h2>今日统计</h2>
+        <div id="stats">
+            <div class="loading">加载统计信息...</div>
+        </div>
+        <button id="clearAllStatusBtn" onclick="confirmClearAllStatus()">清除所有状态</button>
+        <div id="clearMessage"></div>
 
-    <!-- 网络状态 & 页面加载时间 -->
-    <section>
-      <h2>网络状态 & 页面加载时间</h2>
-      <p id="network-status">网络状态： </p>
-      <p id="load-time">页面加载时间： </p>
-    </section>
+    <div class="proxy-section" style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa;">
+        <h2>代客操作区</h2>
+        <p style="color: #666; font-size: 0.9em;">为无法操作的设备代为标记状态</p>
 
-    <!-- 主题切换 & 动态背景效果 -->
-    <section>
-      <h2>主题切换</h2>
-      <button id="theme-toggle">切换主题</button>
-      <p>背景为 CSS 渐变动画效果</p>
-    </section>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="proxyModelInput" placeholder="请输入设备编号" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+            <button onclick="proxyFetchDeviceInfo()" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">查询设备</button>
+        </div>
+        <div id="proxyResult"></div>
+    </div>
 
-    <!-- 社交分享按钮 -->
-    <section>
-      <h2>社交分享</h2>
-      <button onclick="share('facebook')">分享到 Facebook</button>
-      <button onclick="share('twitter')">分享到 Twitter</button>
-    </section>
+    <script>
+    // ... (其他现有函数) ...
 
-    <!-- 返回顶部按钮 -->
-    <button id="back-to-top">返回顶部</button>
+    async function proxyFetchDeviceInfo() {
+      const input = document.getElementById('proxyModelInput');
+      const modelId = input.value.trim();
+      if (!modelId) {
+        alert('请输入设备编号');
+        return;
+      }
+      const resultEl = document.getElementById('proxyResult');
+      resultEl.innerHTML = '<p class="loading">正在查询...</p>';
+      try {
+        const response = await fetch('http://47.122.79.126:5233/api/device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model_id: modelId })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          renderProxyResults(data, modelId);
+        } else {
+          resultEl.innerHTML = `<p style="color:red;">❌ 错误: ${data.error || '未知错误'}</p>`;
+        }
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color:red;">🌐 网络错误: ${err.message}</p>`;
+      }
+    }
 
-    <!-- 多语言支持 -->
-    <section>
-      <h2>多语言支持</h2>
-      <label for="language-select">选择语言：</label>
-      <select id="language-select">
-        <option value="en">English</option>
-        <option value="zh">中文</option>
-      </select>
-      <div id="multilang-content">
-        <p data-en="Hello, this is a test." data-zh="你好，这是一个测试。">Hello, this is a test.</p>
-      </div>
-    </section>
+    function renderProxyResults(data, modelId) {
+      const resultEl = document.getElementById('proxyResult');
+      if (!Array.isArray(data) || data.length === 0) {
+        resultEl.innerHTML = '<p>该设备编号下未找到相关账号信息。</p>';
+        return;
+      }
 
-    <!-- 表单提交测试 -->
-    <section>
-      <h2>表单提交测试</h2>
-      <form id="test-form">
-        <label for="name">姓名：</label>
-        <input type="text" id="name" name="name" required>
-        <br>
-        <label for="email">邮箱：</label>
-        <input type="email" id="email" name="email" required>
-        <br>
-        <button type="submit">提交</button>
-      </form>
-    </section>
+      let html = `<h3>设备编号 <strong>${modelId}</strong> 的账号列表</h3>`;
+      data.forEach((item) => {
+        const recordId = item.id;
+        const school = (item.录入编号 ? `${item.录入编号}、` : '') + (item.学校 || '未知学校');
+        const account = item.账号 || '';
+        const status = item.status || '未完成';
+        const statusColorClass = item.status_color || 'status-uncompleted';
 
-    <!-- Cookie 使用情况 -->
-    <section>
-      <h2>Cookie 测试</h2>
-      <p id="cookie-info">Cookie 信息： </p>
-    </section>
+        html += `
+        <div class="proxy-result-item" style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 10px;">
+          <div><strong>${school}</strong></div>
+          <div>账号: ${account}</div>
+          <div class="status-display ${statusColorClass}" style="display:inline-block; padding: 2px 6px; margin: 5px 0; border-radius: 3px; font-size: 0.9em;">状态: ${status}</div>
 
-    <!-- 本地存储测试 -->
-    <section>
-      <h2>本地存储测试</h2>
-      <p id="local-storage">LocalStorage 信息： </p>
-    </section>
+          <div style="margin-top: 8px;">
+            <label for="statusSelect_${recordId}">标记为: </label>
+            <select id="statusSelect_${recordId}" style="padding: 4px; margin-right: 10px;">
+              <option value="今日已经完成">今日已经完成</option>
+              <option value="密码错误">密码错误</option>
+              <option value="账号不存在">账号不存在</option>
+              <option value="网络异常">网络异常</option>
+              <option value="设备故障">设备故障</option>
+              <option value="手机没电">手机没电</option>
+              <option value="部署异常">部署异常</option>
+              <option value="NPS联结异常">NPS联结异常</option>
+              <option value="账号被其他人登录">账号被其他人登录</option>
+              <option value="时间不够">时间不够</option>
+            </select>
+            <button onclick="proxyMarkStatus(${recordId})" style="padding: 4px 8px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">标记</button>
+          </div>
+        </div>`;
+      });
+      resultEl.innerHTML = html;
+    }
 
-    <!-- WebSocket 测试 -->
-    <section>
-      <h2>WebSocket 测试</h2>
-      <p id="websocket-status">WebSocket 状态： </p>
-    </section>
+    async function proxyMarkStatus(recordId) {
+        const selectElement = document.getElementById(`statusSelect_${recordId}`);
+        if (!selectElement) {
+            console.error(`Status select element for record ${recordId} not found.`);
+            return;
+        }
+        const newStatus = selectElement.value;
 
-    <!-- 鼠标跟踪效果 -->
-    <section>
-      <h2>鼠标跟踪效果</h2>
-      <p id="mouse-coords">鼠标坐标： </p>
-    </section>
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/mark_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ record_id: recordId, status: newStatus })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert(`账号 ${recordId} 状态已更新为: ${newStatus}`);
+                // 重新查询当前设备以刷新显示
+                const modelId = document.getElementById('proxyModelInput').value.trim();
+                if (modelId) {
+                    proxyFetchDeviceInfo();
+                }
+            } else {
+                alert(`标记失败: ${data.error}`);
+            }
+        } catch (err) {
+            console.error('Network error marking status via proxy:', err);
+            alert("网络错误，标记失败。");
+        }
+    }
 
+    // ... (其余现有代码) ...
+    </script>
+
+    <style>
+    /* ... (您现有的CSS) ... */
+    .proxy-result-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .status-display {
+      display: inline-block;
+      padding: 2px 6px;
+      margin: 5px 0;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    .status-display.status-completed { background-color: #d4edda; color: #155724; }
+    .status-display.status-error { background-color: #f8d7da; color: #721c24; }
+    .status-display.status-warning { background-color: #fff3cd; color: #856404; }
+    .status-display.status-uncompleted { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+
+        <!-- 修改：详细统计展示区域 -->
+        <div id="detailedStatsSection" class="detailed-stats-container" style="display:none;">
+            <div class="detailed-stats-title">详细异常统计</div>
+            <div id="detailedStatsContent"></div>
+        </div>
+
+        <!-- 新增：删除所有记录按钮区域 -->
+        <div class="dangerous-operation-section" style="margin-top: 20px; padding: 15px; border: 1px solid #ffc6cb; border-radius: 4px; background-color: #fff5f7;">
+            <h3 style="color: #721c24;">危险操作区域</h3>
+            <button id="deleteAllRecordsBtn" class="dangerous-button" onclick="confirmDeleteAllRecords()">删除所有记录</button>
+            <div id="deleteMessage"></div>
+        </div>
+
+    </div>
 
   </div>
 
-  <!-- 跟踪鼠标的红点 -->
-  <div id="mouse-dot"></div>
-
   <script>
-    // 记录页面加载时间
-    window.addEventListener('load', function() {
-      var loadTime = Date.now() - performance.timing.navigationStart;
-      document.getElementById('load-time').textContent = '页面加载时间： ' + loadTime + ' 毫秒';
-    });
+    async function importCSV() {
+        const fileInput = document.getElementById('csvFile');
+        const messageDiv = document.getElementById('importMessage');
 
-    // 地理位置测试
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        document.getElementById('geolocation').textContent = '地理位置： 纬度 ' +
-          position.coords.latitude.toFixed(4) + ', 经度 ' +
-          position.coords.longitude.toFixed(4);
-      }, function(error) {
-        document.getElementById('geolocation').textContent = '地理位置错误： ' + error.message;
-      });
-    } else {
-      document.getElementById('geolocation').textContent = '该浏览器不支持地理定位。';
+        if (!fileInput.files.length) {
+            messageDiv.innerHTML = '<div class="message error">请选择一个CSV文件</div>';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/import_csv', {
+                method: 'POST',
+                body: formData, // 注意：使用FormData时，不要设置Content-Type，浏览器会自动设置
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
+                loadStats(); // 导入成功后刷新统计
+                loadDetailedStats(); // 同时刷新详细统计
+            } else {
+                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+            }
+        } catch (err) {
+            console.error('Import error:', err);
+            messageDiv.innerHTML = '<div class="message error">网络错误，导入失败</div>';
+        }
     }
 
-    // 浏览器信息
-    document.getElementById('browser-info').textContent = '浏览器信息： ' + navigator.userAgent;
-
-    // 屏幕分辨率
-    document.getElementById('screen-info').textContent = '屏幕分辨率： ' + screen.width + ' x ' + screen.height;
-
-    // 网络状态
-    function updateNetworkStatus() {
-      document.getElementById('network-status').textContent = '网络状态： ' + (navigator.onLine ? '在线' : '离线');
-    }
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-    updateNetworkStatus();
-
-    // 主题切换功能
-    document.getElementById('theme-toggle').addEventListener('click', function() {
-      if (document.body.classList.contains('dark-theme')) {
-        document.body.classList.remove('dark-theme');
-        document.body.classList.add('light-theme');
-      } else {
-        document.body.classList.remove('light-theme');
-        document.body.classList.add('dark-theme');
-      }
-    });
-
-    // 社交分享功能
-    function share(platform) {
-      var url = encodeURIComponent(window.location.href);
-      var text = encodeURIComponent("请看看这个测试页面！");
-      if (platform === 'facebook') {
-        window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank');
-      } else if (platform === 'twitter') {
-        window.open('https://twitter.com/intent/tweet?url=' + url + '&text=' + text, '_blank');
-      }
+    async function loadStats() {
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/stats');
+            const data = await response.json();
+            if (response.ok) {
+                const statsHtml = `
+                    <div class="stat-item">
+                        <span class="stat-label">今日异常:</span>
+                        <span class="stat-value">${data.today_error_count}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">今日未完成:</span>
+                        <span class="stat-value">${data.today_uncompleted_count}</span>
+                    </div>
+                `;
+                document.getElementById('stats').innerHTML = statsHtml;
+            } else {
+                document.getElementById('stats').innerHTML = `<div class="message error">加载统计失败: ${data.error}</div>`;
+            }
+        } catch (err) {
+            console.error('Load stats error:', err);
+            document.getElementById('stats').innerHTML = '<div class="message error">网络错误，加载统计失败</div>';
+        }
     }
 
-    // 返回顶部按钮
-    var backToTopBtn = document.getElementById('back-to-top');
-    window.addEventListener('scroll', function() {
-      if (window.scrollY > 300) {
-        backToTopBtn.style.display = 'block';
-      } else {
-        backToTopBtn.style.display = 'none';
-      }
-    });
-    backToTopBtn.addEventListener('click', function() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    // --- 修改函数：加载详细统计 ---
+    async function loadDetailedStats() {
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/detailed_stats');
+            const data = await response.json();
+            if (response.ok) {
+                const detailedContentDiv = document.getElementById('detailedStatsContent');
+                let detailedHtml = `<div class="detailed-stat-item"><strong>总计异常: ${data.total_error_count}</strong></div>`;
 
-    // 多语言支持
-    document.getElementById('language-select').addEventListener('change', function(){
-      var lang = this.value;
-      document.querySelectorAll('#multilang-content [data-en]').forEach(function(el){
-        el.textContent = el.getAttribute('data-' + lang);
-      });
-    });
+                // --- 修改：生成异常数据表格 ---
+                if (data.error_records && data.error_records.length > 0) {
+                    detailedHtml += '<h3>异常详情</h3><table class="detailed-table"><thead><tr><th>录入编号</th><th>设备编号</th><th>账号</th><th>密码</th><th>学校</th><th>异常类型</th></tr></thead><tbody>';
+                    data.error_records.forEach(record => {
+                        detailedHtml += `<tr><td>${record.录入编号 || ''}</td><td>${record.设备编号 || ''}</td><td>${record.账号 || ''}</td><td>${record.密码 || ''}</td><td>${record.学校 || ''}</td><td>${record.status || ''}</td></tr>`;
+                    });
+                    detailedHtml += '</tbody></table>';
+                } else {
+                    detailedHtml += '<p>无异常数据</p>';
+                }
 
-    // 表单提交测试
-    document.getElementById('test-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      var name = document.getElementById('name').value;
-      var email = document.getElementById('email').value;
-      alert('表单提交成功！\n姓名：' + name + '\n邮箱：' + email);
-    });
+                // --- 修改：生成未完成数据表格 ---
+                if (data.uncompleted_records && data.uncompleted_records.length > 0) {
+                    detailedHtml += '<h3>未完成详情</h3><table class="detailed-table"><thead><tr><th>录入编号</th><th>设备编号</th><th>账号</th><th>密码</th><th>学校</th></tr></thead><tbody>';
+                    data.uncompleted_records.forEach(record => {
+                        detailedHtml += `<tr><td>${record.录入编号 || ''}</td><td>${record.设备编号 || ''}</td><td>${record.账号 || ''}</td><td>${record.密码 || ''}</td><td>${record.学校 || ''}</td></tr>`;
+                    });
+                    detailedHtml += '</tbody></table>';
+                } else {
+                    detailedHtml += '<p>无未完成数据</p>';
+                }
 
-    // Cookie 使用情况测试
-    function setCookie(name, value, days) {
-      var expires = "";
-      if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-      }
-      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
-    function getCookie(name) {
-      var nameEQ = name + "=";
-      var ca = document.cookie.split(';');
-      for(var i=0;i < ca.length;i++) {
-        var c = ca[i].trim();
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
-      }
-      return null;
-    }
-    setCookie("testCookie", "CookieValue", 1);
-    document.getElementById('cookie-info').textContent = "Cookie 信息： testCookie = " + getCookie("testCookie");
-
-    // 本地存储测试
-    localStorage.setItem("testLocalStorage", "LocalStorageValue");
-    document.getElementById('local-storage').textContent = "LocalStorage 信息： testLocalStorage = " + localStorage.getItem("testLocalStorage");
-
-    // WebSocket 测试（连接公共回显服务器）
-    if ("WebSocket" in window) {
-      var ws = new WebSocket("wss://echo.websocket.events/");
-      ws.onopen = function() {
-        document.getElementById('websocket-status').textContent = "WebSocket 状态： 已连接";
-        ws.send("Hello WebSocket!");
-      };
-      ws.onmessage = function (evt) {
-        var received_msg = evt.data;
-        document.getElementById('websocket-status').textContent += " | 收到信息：" + received_msg;
-        ws.close();
-      };
-      ws.onerror = function(err) {
-        document.getElementById('websocket-status').textContent = "WebSocket 状态： 连接错误";
-      };
-    } else {
-      document.getElementById('websocket-status').textContent = "WebSocket 状态： 浏览器不支持";
+                detailedContentDiv.innerHTML = detailedHtml;
+                document.getElementById('detailedStatsSection').style.display = 'block'; // 显示区域
+            } else {
+                document.getElementById('detailedStatsContent').innerHTML = `<div class="message error">加载详细统计失败: ${data.error}</div>`;
+                document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
+            }
+        } catch (err) {
+            console.error('Load detailed stats error:', err);
+            document.getElementById('detailedStatsContent').innerHTML = '<div class="message error">网络错误，加载详细统计失败</div>';
+            document.getElementById('detailedStatsSection').style.display = 'block'; // 确保区域显示
+        }
     }
 
-    // 鼠标跟踪效果
-    var mouseDot = document.getElementById('mouse-dot');
-    document.addEventListener('mousemove', function(e) {
-      mouseDot.style.left = e.pageX + 'px';
-      mouseDot.style.top = e.pageY + 'px';
-      document.getElementById('mouse-coords').textContent = "鼠标坐标： " + e.pageX + ", " + e.pageY;
-    });
 
-    // 显示访问者 IP（使用第三方 API）
-    fetch('https://api.ipify.org?format=json')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('visitor-ip').textContent = "访问者 IP： " + data.ip;
-      })
-      .catch(err => {
-        document.getElementById('visitor-ip').textContent = "访问者 IP： 获取失败";
-      });
+    function confirmClearAllStatus() {
+        const confirmation = prompt("⚠️ 危险操作！\n此操作将清除所有记录的状态。\n请输入 '确认清除' 以继续：");
+        if (confirmation === "确认清除") {
+            sendClearAllStatusRequest();
+        } else {
+            document.getElementById('clearMessage').innerHTML = '<div class="message error">操作已取消</div>';
+        }
+    }
+
+    async function sendClearAllStatusRequest() {
+        const messageDiv = document.getElementById('clearMessage');
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/clear_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirmation: "确认清除" })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
+                loadStats(); // 清除成功后刷新统计
+                loadDetailedStats(); // 同时刷新详细统计
+            } else {
+                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+            }
+        } catch (err) {
+            console.error('Clear status error:', err);
+            messageDiv.innerHTML = '<div class="message error">网络错误，清除失败</div>';
+        }
+    }
+
+    // --- 新增函数：确认删除所有记录 ---
+    function confirmDeleteAllRecords() {
+        const confirmation = prompt("⚠️ 超级危险操作！\n此操作将永久删除数据库中的所有记录，无法恢复！\n请输入 '我知道我在干什么我正在删除全部数据' 以继续：");
+        if (confirmation === "我知道我在干什么我正在删除全部数据") {
+            sendDeleteAllRecordsRequest();
+        } else {
+            document.getElementById('deleteMessage').innerHTML = '<div class="message error">操作已取消或输入错误</div>';
+        }
+    }
+
+    // --- 新增函数：发送删除所有记录请求 ---
+    async function sendDeleteAllRecordsRequest() {
+        const messageDiv = document.getElementById('deleteMessage');
+        try {
+            const response = await fetch('http://47.122.79.126:5233/api/delete_all_records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirmation: "我知道我在干什么我正在删除全部数据" }) // 确保发送正确的确认字符串
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                messageDiv.innerHTML = `<div class="message success">${data.message}</div>`;
+                // 删除后，刷新统计信息，它们应该都变为0
+                loadStats();
+                loadDetailedStats();
+            } else {
+                messageDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+            }
+        } catch (err) {
+            console.error('Delete all records error:', err);
+            messageDiv.innerHTML = '<div class="message error">网络错误，删除失败</div>';
+        }
+    }
+
+
+    // 页面加载时获取统计信息
+    window.onload = () => {
+        loadStats();
+        loadDetailedStats(); // 加载详细统计
+    };
+
   </script>
+
+  
 </body>
 </html>
