@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设备信息查询</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background-color: #fafafa;
+      color: #333;
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 4px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .number-btn {
+      width: 100%;
+      height: 100px;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .result-item {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .school {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    .account, .password {
+      font-size: 1rem;
+      margin: 6px 0;
+    }
+    .details {
+      font-size: 0.85rem;
+      color: #777;
+      margin-top: 10px;
+      display: none;
+    }
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #007aff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 8px;
+      padding: 0;
+      text-align: left;
+    }
+    .loading {
+      color: #888;
+    }
+    #result {
+      margin-top: 16px;
+    }
+    .device-info {
+      font-size: 1rem;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .edit-btn {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      background: #eee;
+      color: #555;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      height: auto;
+      width: auto;
+    }
+    .edit-btn:hover {
+      background: #ddd;
+    }
+    .hidden {
+      display: none !important;
+    }
+    /* 新增：状态按钮样式 */
+    .status-btn {
+        margin-top: 8px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        color: #333;
+    }
+    .status-btn:hover {
+        background-color: #e0e0e0;
+    }
+    /* 新增：状态显示 */
+    .status-display {
+        margin-top: 8px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .status-completed { background-color: #d4edda; color: #155724; }
+    .status-error { background-color: #f8d7da; color: #721c24; }
+    .status-warning { background-color: #fff3cd; color: #856404; }
+    .status-uncompleted { background-color: #d1ecf1; color: #0c5460; }
+    .status-other { background-color: #e2e3e5; color: #383d41; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
+
+    /* 新增：清除状态按钮 */
+    #clearStatusBtn {
+        background-color: #dc3545; /* Bootstrap danger color */
+    }
+    #clearStatusBtn:hover {
+        background-color: #c82333;
+    }
+
+    /* 数字键盘容器 */
+    .number-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    /* 序号选择容器 */
+    .index-selection {
+      margin: 16px 0;
+      padding: 16px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .index-selection h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .index-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .index-buttons button {
+      width: 100%;
+      height: 60px;
+      font-size: 1.1rem;
+    }
+
+    /* 设置窗口样式 */
+    #settingsModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+    }
+
+    .setting-item {
+      margin: 10px 0;
+    }
+
+    .setting-item label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .setting-item select, .setting-item input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .modal-buttons {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    .modal-buttons button {
+      margin-left: 10px;
+      width: auto;
+    }
+    
+    /* 横幅弹窗样式 */
+    #toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50;
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1001;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      min-width: 250px;
+      text-align: center;
+    }
+    
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    
+    /* 右上角设置按钮样式 */
+    .settings-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background-color: #007aff;
+      border-radius: 8px;
+    }
+    
+    /* 查询和上传已完成按钮容器 */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    
+    .action-buttons button {
+      height: 60px;
+      font-size: 1.1rem;
+    }
+    
+    /* 留空按钮样式 */
+    .empty-btn {
+      visibility: hidden;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>请输入设备编号</h2>
+  
+  <!-- 右上角设置按钮 -->
+  <button class="settings-btn" onclick="openSettings()">⚙️</button>
+  
+  <div class="number-pad">
+    <button class="number-btn" onclick="appendNumber('1')">1</button>
+    <button class="number-btn" onclick="appendNumber('2')">2</button>
+    <button class="number-btn" onclick="appendNumber('3')">3</button>
+    <button class="number-btn" onclick="appendNumber('4')">4</button>
+    <button class="number-btn" onclick="appendNumber('5')">5</button>
+    <button class="number-btn" onclick="appendNumber('6')">6</button>
+    <button class="number-btn" onclick="appendNumber('7')">7</button>
+    <button class="number-btn" onclick="appendNumber('8')">8</button>
+    <button class="number-btn" onclick="appendNumber('9')">9</button>
+    <button class="number-btn" onclick="backspace()">←</button>
+    <button class="number-btn" onclick="appendNumber('0')">0</button>
+    <button class="number-btn" onclick="clearInput()">C</button>
+  </div>
+  
+  <!-- 查询和上传已完成按钮 -->
+  <div class="action-buttons">
+    <button class="empty-btn">留空</button>
+    <button class="number-btn" onclick="markAllCompleted()">上传已完成</button>
+    <button class="number-btn" onclick="fetchDeviceInfo()">查询</button>
+    
+  </div>
+  
+  <input type="text" id="modelInput" placeholder="手动输入设备编号" value="" />
+  
+  <div id="indexSelection" class="hidden">
+    <div class="index-selection">
+      <h3>选择要上传已完成的账号序号</h3>
+      <div class="index-buttons" id="indexButtons"></div>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <!-- 设置窗口 -->
+  <div id="settingsModal">
+    <div class="modal-content">
+      <h3>设置</h3>
+      <div class="setting-item">
+        <label>多个账号时自动上传第几个：</label>
+        <select id="autoUploadIndex">
+          <option value="0">不自动上传</option>
+          <option value="1">第1个</option>
+          <option value="2">第2个</option>
+          <option value="3">第3个</option>
+          <option value="4">第4个</option>
+          <option value="5">第5个</option>
+          <option value="6">第6个</option>
+          <option value="7">第7个</option>
+          <option value="8">第8个</option>
+          <option value="9">第9个</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button onclick="closeSettings()">取消</button>
+        <button onclick="saveSettings()">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 横幅弹窗 -->
+  <div id="toast">操作成功</div>
+
+  <script>
+    let currentData = []; // 用于缓存当前显示的数据
+    let autoUploadIndex = 0; // 默认不自动上传
+    let isProcessingSingleAccount = false; // 标记是否正在处理单个账号的自动完成
+
+    function appendNumber(num) {
+      const input = document.getElementById('modelInput');
+      input.value += num;
+    }
+
+    function clearInput() {
+      document.getElementById('modelInput').value = '';
+    }
+
+    function backspace() {
+      const input = document.getElementById('modelInput');
+      input.value = input.value.slice(0, -1);
+    }
+
+    function openSettings() {
+      document.getElementById('settingsModal').style.display = 'flex';
+      document.getElementById('autoUploadIndex').value = autoUploadIndex;
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function saveSettings() {
+      autoUploadIndex = parseInt(document.getElementById('autoUploadIndex').value) || 0;
+      localStorage.setItem('autoUploadIndex', autoUploadIndex.toString());
+      closeSettings();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000); // 2秒后自动隐藏
+    }
+
+    function markAllCompleted() {
+      const modelId = document.getElementById('modelInput').value.trim();
+      if (!modelId) {
+        showToast('请输入设备编号');
+        return;
+      }
+      
+      fetch('http://47.122.79.126:6344/api/device', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_id: modelId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const promises = data.map(item => 
+            fetch('http://47.122.79.126:6344/api/mark_completed', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ record_id: item.id })
+            })
+          );
+          
+          Promise.all(promises)
+            .then(results => {
+              showToast('所有账号已上传为已完成');
+              fetchDeviceInfo(); // 重新查询以更新状态
+            })
+            .catch(err => {
+              console.error('批量标记完成失败:', err);
+              showToast('批量标记完成失败');
+            });
+        } else {
+          showToast('未找到相关设备信息');
+        }
+      })
+      .catch(err => {
+        console.error('查询失败:', err);
+        showToast('查询失败');
+      });
+    }
+
+    function renderResults(data) {
+      currentData = data; // 缓存数据
+      const resultEl = document.getElementById('result');
+      if (!Array.isArray(data) || data.length === 0) {
+        resultEl.innerHTML = '<p>未找到相关设备信息。</p>';
+        document.getElementById('indexSelection').classList.add('hidden');
+        return;
+      }
+
+      resultEl.innerHTML = '';
+      
+      if (data.length === 1 && !isProcessingSingleAccount) {
+        // 只有一个账号，直接标记完成
+        isProcessingSingleAccount = true; // 设置标记，防止重复处理
+        const item = data[0];
+        resultEl.innerHTML = '<p>单个账号，正在自动标记为已完成...</p>';
+        markRecordCompleted(item.id);
+      } else {
+        isProcessingSingleAccount = false; // 重置标记
+        // 多个账号，显示账号信息和序号选择
+        data.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'result-item';
+          
+          const school = document.createElement('div');
+          school.className = 'school';
+          const luRuBianHao = item.录入编号 || '';
+          const xueXiao = item.学校 || '未知学校';
+          if (luRuBianHao) {
+            school.textContent = `${luRuBianHao}、${xueXiao}`;
+          } else {
+            school.textContent = xueXiao;
+          }
+
+          const account = document.createElement('div');
+          account.className = 'account';
+          account.textContent = '账号：' + (item.账号 || '');
+
+          const password = document.createElement('div');
+          password.className = 'password';
+          password.textContent = '密码：' + (item.密码 || '');
+
+          div.appendChild(school);
+          div.appendChild(account);
+          div.appendChild(password);
+          resultEl.appendChild(div);
+        });
+
+        // 显示序号选择按钮
+        showIndexSelection(data.length);
+      }
+    }
+
+    function showIndexSelection(count) {
+      const indexSelection = document.getElementById('indexSelection');
+      const indexButtons = document.getElementById('indexButtons');
+      indexButtons.innerHTML = '';
+
+      // 根据设置自动上传
+      if (autoUploadIndex > 0 && autoUploadIndex <= count) {
+        const item = currentData[autoUploadIndex - 1];
+        if (item) {
+          markRecordCompleted(item.id);
+          showToast(`已自动上传第${autoUploadIndex}个账号为已完成`);
+          return;
+        }
+      }
+
+      for (let i = 1; i <= Math.min(count, 9); i++) {
+        const btn = document.createElement('button');
+        btn.textContent = `第${i}个`;
+        btn.onclick = () => selectIndex(i);
+        indexButtons.appendChild(btn);
+      }
+
+      indexSelection.classList.remove('hidden');
+    }
+
+    function selectIndex(index) {
+      const item = currentData[index - 1];
+      if (item) {
+        markRecordCompleted(item.id);
+        document.getElementById('indexSelection').classList.add('hidden');
+      }
+    }
+
+    async function markRecordCompleted(recordId) {
+      try {
+        const response = await fetch('http://47.122.79.126:6344/api/mark_completed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ record_id: recordId })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast('账号已标记为已完成');
+          // 清除输入框内容
+          document.getElementById('modelInput').value = '';
+          // 不重新查询，直接更新UI状态
+          isProcessingSingleAccount = false; // 重置标记
+          // 如果是单个账号的自动完成，直接显示完成信息
+          if (currentData.length === 1) {
+            document.getElementById('result').innerHTML = '<p>单个账号，已自动标记为已完成。</p>';
+          } else {
+            // 如果是手动选择的，重新查询以更新列表状态
+            fetchDeviceInfo();
+          }
+        } else {
+          console.error('Failed to mark record as completed:', data.error || response.statusText);
+          showToast("标记完成失败");
+          isProcessingSingleAccount = false; // 重置标记
+        }
+      } catch (err) {
+        console.error('Network error marking record as completed:', err);
+        showToast("网络错误，标记完成失败");
+        isProcessingSingleAccount = false; // 重置标记
+      }
+    }
+
+    async function fetchDeviceInfo() {
+      const input = document.getElementById('modelInput');
+      const modelId = input.value.trim();
+      if (!modelId) {
+        showToast('请输入设备编号');
+        return;
+      }
+      
+      const resultEl = document.getElementById('result');
+      resultEl.innerHTML = '<p class="loading">正在查询...</p>';
+      document.getElementById('indexSelection').classList.add('hidden');
+      
+      try {
+        const response = await fetch('http://47.122.79.126:6344/api/device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model_id: modelId })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          renderResults(data);
+        } else {
+          resultEl.innerHTML = `<p style="color:red;">❌ 错误: ${data.error || '未知错误'}</p>`;
+          isProcessingSingleAccount = false; // 重置标记
+        }
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color:red;">🌐 网络错误: ${err.message}</p><p>💡 请确认 Flask 服务器已启动！</p>`;
+        isProcessingSingleAccount = false; // 重置标记
+      }
+    }
+
+    // 页面加载时从localStorage获取设置
+    window.onload = () => {
+      const savedIndex = localStorage.getItem('autoUploadIndex');
+      if (savedIndex !== null) {
+        autoUploadIndex = parseInt(savedIndex);
+      }
+    };
+  </script>
+</body>
+</html>
