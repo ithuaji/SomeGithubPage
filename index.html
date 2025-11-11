@@ -167,6 +167,7 @@
     .status-warning { background-color: #fff3cd; color: #856404; }
     .status-uncompleted { background-color: #d1ecf1; color: #0c5460; }
     .status-other { background-color: #e2e3e5; color: #383d41; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
 
     /* 新增：清除状态按钮 */
     #clearStatusBtn {
@@ -197,6 +198,7 @@
   <script>
     let copiedFlags = {}; // 用于跟踪每个记录的账号和密码是否都已被复制
     let currentData = []; // 用于缓存当前显示的数据
+    const COPY_TIMEOUT = 3 * 60 * 1000; // 3分钟的毫秒数
 
     function showCopyToast() {
       const toast = document.getElementById('copy-toast');
@@ -209,9 +211,9 @@
     function copyToClipboard(text, recordId, type) { // 增加recordId和type参数
       // 保存到 localStorage
       if (type === 'account') {
-        localStorage.setItem('lastCopied', JSON.stringify({ type: 'account', value: text, recordId: recordId }));
+        localStorage.setItem('lastCopied', JSON.stringify({ type: 'account', value: text, recordId: recordId, timestamp: Date.now() }));
       } else if (type === 'password') {
-        localStorage.setItem('lastCopied', JSON.stringify({ type: 'password', value: text, recordId: recordId }));
+        localStorage.setItem('lastCopied', JSON.stringify({ type: 'password', value: text, recordId: recordId, timestamp: Date.now() }));
       }
 
       if (navigator.clipboard) {
@@ -244,15 +246,27 @@
     }
 
     function markCopied(recordId, type) {
-        if (!copiedFlags[recordId]) {
-            copiedFlags[recordId] = { account: false, password: false };
+        // 检查localStorage中是否已有该记录的复制记录
+        const storedCopies = JSON.parse(localStorage.getItem('copiedRecords') || '{}');
+        
+        if (!storedCopies[recordId]) {
+            storedCopies[recordId] = { account: null, password: null };
         }
-        copiedFlags[recordId][type] = true;
-
-        // 检查是否账号和密码都已复制
-        if (copiedFlags[recordId].account && copiedFlags[recordId].password) {
-            // 发送请求标记为完成
-            markRecordCompleted(recordId);
+        
+        // 更新当前复制记录
+        storedCopies[recordId][type] = Date.now();
+        localStorage.setItem('copiedRecords', JSON.stringify(storedCopies));
+        
+        // 检查是否账号和密码都在3分钟内被复制
+        if (storedCopies[recordId].account && storedCopies[recordId].password) {
+            const accountTime = storedCopies[recordId].account;
+            const passwordTime = storedCopies[recordId].password;
+            const timeDiff = Math.abs(accountTime - passwordTime);
+            
+            if (timeDiff <= COPY_TIMEOUT) {
+                // 发送请求标记为完成
+                markRecordCompleted(recordId);
+            }
         }
 
         // 立即更新UI，显示“上次复制”标签
@@ -260,25 +274,41 @@
     }
 
     async function markRecordCompleted(recordId) {
+        const statusDiv = document.querySelector(`#status-${recordId}`);
+        if (statusDiv) {
+            statusDiv.textContent = '等待服务器回复...';
+            statusDiv.className = 'status-display status-pending';
+        }
+        
         try {
-            const response = await fetch('http://47.122.79.126:5233/api/mark_completed', {
+            const response = await fetch('http://47.122.79.126:6344/api/mark_completed', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ record_id: recordId })
             });
+            const data = await response.json();
             if (response.ok) {
-                // 更新本地显示状态 (可选，也可以重新查询)
-                const statusDiv = document.querySelector(`#status-${recordId}`);
+                // 更新本地显示状态
                 if (statusDiv) {
                      statusDiv.textContent = '今日已经完成';
                      statusDiv.className = 'status-display status-completed';
                 }
                 console.log(`Record ${recordId} marked as completed.`);
             } else {
-                console.error('Failed to mark record as completed:', await response.text());
+                console.error('Failed to mark record as completed:', data.error || response.statusText);
+                // 提示失败并自动重试
+                alert("标记完成失败，正在重试...");
+                setTimeout(() => {
+                    markRecordCompleted(recordId);
+                }, 2000);
             }
         } catch (err) {
             console.error('Network error marking record as completed:', err);
+            // 提示失败并自动重试
+            alert("网络错误，标记完成失败，正在重试...");
+            setTimeout(() => {
+                markRecordCompleted(recordId);
+            }, 2000);
         }
     }
 
@@ -308,7 +338,13 @@
       let lastCopied = null;
       try {
         const stored = localStorage.getItem('lastCopied');
-        if (stored) lastCopied = JSON.parse(stored);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // 检查是否在3分钟内
+            if (Date.now() - parsed.timestamp <= COPY_TIMEOUT) {
+                lastCopied = parsed;
+            }
+        }
       } catch (e) {
         lastCopied = null;
       }
@@ -378,15 +414,13 @@
         statusDiv.className = `status-display ${item.status_color || 'status-uncompleted'}`;
         statusDiv.textContent = item.status || '未完成';
 
-        // 状态标记按钮 (仅当状态不是'今日已经完成'时显示)
+        // 状态标记按钮 (现在总是显示，即使已完成)
         const statusBtnContainer = document.createElement('div');
-        if (item.status !== '今日已经完成') {
-            const statusBtn = document.createElement('button');
-            statusBtn.className = 'status-btn';
-            statusBtn.textContent = '标记异常';
-            statusBtn.onclick = () => promptAndMarkStatus(item.id);
-            statusBtnContainer.appendChild(statusBtn);
-        }
+        const statusBtn = document.createElement('button');
+        statusBtn.className = 'status-btn';
+        statusBtn.textContent = '标记异常';
+        statusBtn.onclick = () => promptAndMarkStatus(item.id);
+        statusBtnContainer.appendChild(statusBtn);
 
         // 检查当前项是否是上次复制的
         if (lastCopied && lastCopied.recordId === item.id) {
@@ -436,15 +470,21 @@
     }
 
     async function sendMarkStatusRequest(recordId, status) {
+        const statusDiv = document.querySelector(`#status-${recordId}`);
+        if (statusDiv) {
+            statusDiv.textContent = '等待服务器回复...';
+            statusDiv.className = 'status-display status-pending';
+        }
+        
         try {
-            const response = await fetch('http://47.122.79.126:5233/api/mark_status', {
+            const response = await fetch('http://47.122.79.126:6344/api/mark_status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ record_id: recordId, status: status })
             });
+            const data = await response.json();
             if (response.ok) {
-                // 更新本地显示状态 (可选，也可以重新查询)
-                const statusDiv = document.querySelector(`#status-${recordId}`);
+                // 更新本地显示状态
                 if (statusDiv) {
                      statusDiv.textContent = status;
                      // 重新获取颜色类 (从服务器响应或本地计算)
@@ -453,12 +493,22 @@
                 }
                 console.log(`Record ${recordId} marked with status: ${status}`);
             } else {
-                console.error('Failed to mark status:', await response.text());
+                console.error('Failed to mark status:', data.error || response.statusText);
                 alert("标记失败，请重试。");
+                // 恢复原状态
+                if (statusDiv) {
+                    statusDiv.textContent = currentData.find(item => item.id === recordId)?.status || '未完成';
+                    statusDiv.className = `status-display ${getStatusColorClass(currentData.find(item => item.id === recordId)?.status || '未完成')}`;
+                }
             }
         } catch (err) {
             console.error('Network error marking status:', err);
             alert("网络错误，标记失败。");
+            // 恢复原状态
+            if (statusDiv) {
+                statusDiv.textContent = currentData.find(item => item.id === recordId)?.status || '未完成';
+                statusDiv.className = `status-display ${getStatusColorClass(currentData.find(item => item.id === recordId)?.status || '未完成')}`;
+            }
         }
     }
 
@@ -475,6 +525,8 @@
             "NPS联结异常": "status-warning",
             "账号被其他人登录": "status-warning",
             "时间不够": "status-warning",
+            "未完成": "status-uncompleted",  // 新增状态
+            "等待服务器回复...": "status-pending", // 新增状态
             "": "status-uncompleted",
             null: "status-uncompleted"
         };
@@ -493,7 +545,7 @@
       const resultEl = document.getElementById('result');
       resultEl.innerHTML = '<p class="loading">正在查询...</p>';
       try {
-        const response = await fetch('http://47.122.79.126:5233/api/device', {
+        const response = await fetch('http://47.122.79.126:6344/api/device', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model_id: modelId })
@@ -534,7 +586,7 @@
 
     async function sendClearStatusRequest() {
         try {
-            const response = await fetch('http://47.122.79.126:5233/api/clear_status', {
+            const response = await fetch('http://47.122.79.126:6344/api/clear_status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ confirmation: "确认清除" })
@@ -561,6 +613,7 @@
       const last = localStorage.getItem('lastModelId');
       if (last) {
         document.getElementById('modelInput').value = last;
+        // 如果有保存的设备编号，自动查询
         setTimeout(fetchDeviceInfo, 300);
       }
     };
