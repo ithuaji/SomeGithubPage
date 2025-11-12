@@ -281,7 +281,7 @@
         }
         
         try {
-            const response = await fetch('http://47.122.79.126:6344/api/mark_completed', {
+            const response = await fetch('http://47.122.79.126:5233/api/mark_completed', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ record_id: recordId })
@@ -477,7 +477,7 @@
         }
         
         try {
-            const response = await fetch('http://47.122.79.126:6344/api/mark_status', {
+            const response = await fetch('http://47.122.79.126:5233/api/mark_status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ record_id: recordId, status: status })
@@ -545,7 +545,7 @@
       const resultEl = document.getElementById('result');
       resultEl.innerHTML = '<p class="loading">正在查询...</p>';
       try {
-        const response = await fetch('http://47.122.79.126:6344/api/device', {
+        const response = await fetch('http://47.122.79.126:5233/api/device', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model_id: modelId })
@@ -586,7 +586,7 @@
 
     async function sendClearStatusRequest() {
         try {
-            const response = await fetch('http://47.122.79.126:6344/api/clear_status', {
+            const response = await fetch('http://47.122.79.126:5233/api/clear_status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ confirmation: "确认清除" })
